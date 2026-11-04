@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- ================= SEGUIMIENTO DE PROYECTOS (consulta de avance para atender al cliente) ================= -->
+<VBox prefHeight="820.0" prefWidth="1072.0" spacing="20.0" styleClass="modulo" stylesheets="@../css/estilos.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="soptecit.controladores.SeguimientoController">
+   <children>
+
+      <!-- Búsqueda -->
+      <HBox alignment="CENTER_LEFT" spacing="10.0" styleClass="tarjeta">
+         <children>
+            <VBox>
+               <children>
+                  <Label styleClass="tarjeta-titulo" text="Consulta de avance del proyecto" />
+                  <Label styleClass="tarjeta-subtitulo" text="Toda la información del proyecto en un solo lugar, sin preguntar a cada área" />
+               </children>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <TextField fx:id="txtFolioBuscar" onAction="#buscarProyecto" prefWidth="300.0" promptText="Folio (PRY-2026-014) o nombre del cliente" />
+            <Button fx:id="btnBuscar" mnemonicParsing="false" onAction="#buscarProyecto" styleClass="boton-primario" text="Buscar">
+               <graphic>
+                  <SVGPath content="M10.5 17 A6.5 6.5 0 1 0 10.5 4 A6.5 6.5 0 1 0 10.5 17 Z M15.5 15.5 L20 20" styleClass="icono-boton" />
+               </graphic>
+            </Button>
+         </children>
+      </HBox>
+
+      <HBox spacing="20.0" VBox.vgrow="ALWAYS">
+         <children>
+            <VBox spacing="20.0" HBox.hgrow="ALWAYS">
+               <children>
+
+                  <!-- Encabezado del proyecto -->
+                  <VBox spacing="12.0" styleClass="tarjeta">
+                     <children>
+                        <HBox alignment="TOP_LEFT" spacing="10.0">
+                           <children>
+                              <VBox spacing="2.0">
+                                 <children>
+                                    <Label fx:id="lblFolio" styleClass="texto-tenue" text="PRY-2026-014" />
+                                    <Label fx:id="lblCliente" styleClass="texto-grande" text="Corporativo Avante S.A." />
+                                    <Label fx:id="lblDescripcion" styleClass="texto-tenue" text="Cableado estructurado Cat6 · 24 nodos · Av. Vallarta 1234, Guadalajara" />
+                                 </children>
+                              </VBox>
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblEstadoProyecto" text="En tiempo">
+                                 <styleClass>
+                                    <String fx:value="badge" />
+                                    <String fx:value="badge-exito" />
+                                 </styleClass>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT" spacing="12.0">
+                           <children>
+                              <ProgressBar fx:id="pbAvance" maxWidth="1.7976931348623157E308" progress="0.65" styleClass="progreso-grande" HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblAvance" styleClass="tarjeta-titulo" text="65 %" />
+                           </children>
+                        </HBox>
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox maxWidth="1.7976931348623157E308" styleClass="item-lista" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="texto-tenue" text="Inicio" />
+                                    <Label fx:id="lblFechaInicio" styleClass="texto-valor" text="06/10/2026" />
+                                 </children>
+                              </VBox>
+                              <VBox maxWidth="1.7976931348623157E308" styleClass="item-lista" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="texto-tenue" text="Entrega comprometida" />
+                                    <Label fx:id="lblFechaEntrega" styleClass="texto-valor" text="20/11/2026" />
+                                 </children>
+                              </VBox>
+                              <VBox maxWidth="1.7976931348623157E308" styleClass="item-lista" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="texto-tenue" text="Área responsable" />
+                                    <Label fx:id="lblAreaActual" styleClass="texto-valor" text="Instalaciones" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <!-- Línea de tiempo -->
+                  <VBox spacing="12.0" styleClass="tarjeta" VBox.vgrow="ALWAYS">
+                     <children>
+                        <Label styleClass="tarjeta-titulo" text="Línea de tiempo del proyecto" />
+                        <VBox fx:id="lineaTiempo" spacing="0.0">
+                           <children>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-hecho" />
+                                          <SVGPath content="M7.5 12.5 L10.5 15.5 L16.5 9" styleClass="paso-marca" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-hecha" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Cita y atención" />
+                                          <Label text="Ventas">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="06/10/2026">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="texto-tenue" text="Asesoría con Ing. Laura Hernández; se detectan necesidades de 24 nodos." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-hecho" />
+                                          <SVGPath content="M7.5 12.5 L10.5 15.5 L16.5 9" styleClass="paso-marca" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-hecha" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Levantamiento en sitio" />
+                                          <Label text="Levantamientos">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="09/10/2026">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="texto-tenue" text="Croquis LEV-2026-031 entregado con materiales estimados." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-hecho" />
+                                          <SVGPath content="M7.5 12.5 L10.5 15.5 L16.5 9" styleClass="paso-marca" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-hecha" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Propuesta aprobada" />
+                                          <Label text="Administración">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="12/10/2026">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="texto-tenue" text="Propuesta PRO-2026-018 aprobada por $86,400 + IVA." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-hecho" />
+                                          <SVGPath content="M7.5 12.5 L10.5 15.5 L16.5 9" styleClass="paso-marca" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-hecha" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Material surtido" />
+                                          <Label text="Compras-Almacén">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="15/10/2026">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="texto-tenue" text="Orden OC-0042 recibida completa y entregada a Instalaciones." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-actual" />
+                                          <Circle radius="5.0" fill="WHITE" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-pendiente" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Instalación en curso" />
+                                          <Label text="Instalaciones">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="65 %">
+                                             <styleClass>
+                                                <String fx:value="badge" /><String fx:value="badge-info" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="texto-tenue" text="Tendido de cable terminado; en proceso de ponchado y montaje de rack." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-pendiente" />
+                                          <Label styleClass="texto-tenue" text="6" />
+                                       </children>
+                                    </StackPane>
+                                    <Line endY="36.0" styleClass="paso-linea-pendiente" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Revisión final" />
+                                          <Label text="Administración">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="Pendiente">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="paso-pendiente-texto" text="Pruebas, certificación y acta de entrega." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                        <HBox spacing="14.0">
+                           <children>
+                              <VBox alignment="TOP_CENTER" minWidth="28.0">
+                                 <children>
+                                    <StackPane>
+                                       <children>
+                                          <Circle radius="13.0" styleClass="paso-pendiente" />
+                                          <Label styleClass="texto-tenue" text="7" />
+                                       </children>
+                                    </StackPane>
+                                 </children>
+                              </VBox>
+                              <VBox spacing="2.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <HBox alignment="CENTER_LEFT" spacing="8.0">
+                                       <children>
+                                          <Label styleClass="paso-titulo" text="Entrega y cierre" />
+                                          <Label text="Administración">
+                                             <styleClass>
+                                                <String fx:value="badge" />
+                                                <String fx:value="badge-neutro" />
+                                             </styleClass>
+                                          </Label>
+                                          <Region HBox.hgrow="ALWAYS" />
+                                          <Label text="Pendiente">
+                                             <styleClass>
+                                                <String fx:value="texto-tenue" />
+                                             </styleClass>
+                                          </Label>
+                                       </children>
+                                    </HBox>
+                                    <Label styleClass="paso-pendiente-texto" text="Liquidación del saldo y cierre del expediente." wrapText="true" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                           </children>
+                        </VBox>
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+
+            <!-- ===================== PANEL DERECHO ===================== -->
+            <VBox minWidth="300.0" prefWidth="320.0" spacing="20.0">
+               <children>
+                  <VBox spacing="8.0" styleClass="tarjeta">
+                     <children>
+                        <Label styleClass="tarjeta-titulo" text="Resumen de pagos" />
+                        <HBox styleClass="resumen-fila">
+                           <children>
+                              <Label styleClass="texto-tenue" text="Total del proyecto" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblTotalProyecto" styleClass="texto-valor" text="\$100,224.00" />
+                           </children>
+                        </HBox>
+                        <HBox styleClass="resumen-fila">
+                           <children>
+                              <Label styleClass="texto-tenue" text="Pagado" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblPagado" styleClass="texto-valor" text="\$50,112.00" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT">
+                           <children>
+                              <Label styleClass="tarjeta-titulo" text="Saldo" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblSaldo" styleClass="texto-total" text="\$50,112.00" />
+                           </children>
+                        </HBox>
+                        <ProgressBar fx:id="pbPagos" maxWidth="1.7976931348623157E308" progress="0.5" styleClass="progreso-exito" />
+                        <Label fx:id="lblPorcentajePagado" styleClass="texto-tenue" text="50 % liquidado · anticipo recibido" />
+                     </children>
+                  </VBox>
+
+                  <VBox spacing="6.0" styleClass="tarjeta">
+                     <children>
+                        <Label styleClass="tarjeta-titulo" text="Contacto del cliente" />
+                        <Label fx:id="lblContacto" styleClass="texto-valor" text="Ing. Laura Hernández" />
+                        <Label fx:id="lblTelefonoContacto" styleClass="texto-tenue" text="33 1234 5678" />
+                        <Label fx:id="lblCorreoContacto" styleClass="texto-tenue" text="lhernandez@avante.mx" />
+                     </children>
+                  </VBox>
+
+                  <VBox spacing="10.0" styleClass="tarjeta" VBox.vgrow="ALWAYS">
+                     <children>
+                        <Label styleClass="tarjeta-titulo" text="Notas para el cliente" />
+                        <TextArea fx:id="txtNotasCliente" minHeight="70.0" prefRowCount="3" promptText="Mensaje con el estado actual del proyecto..." wrapText="true" VBox.vgrow="ALWAYS" />
+                        <Button fx:id="btnEnviarActualizacion" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#enviarActualizacion" styleClass="boton-primario" text="Enviar actualización al cliente" />
+                        <Button fx:id="btnExportar" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#exportarReporte" styleClass="boton-secundario" text="Exportar reporte (PDF)" />
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</VBox>

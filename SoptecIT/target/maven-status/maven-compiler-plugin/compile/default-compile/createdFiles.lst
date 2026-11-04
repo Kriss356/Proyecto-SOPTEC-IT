@@ -1,0 +1,17 @@
+soptecit\controladores\ComprasAlmacenController.class
+soptecit\util\Tablas$1.class
+soptecit\SoptecIT.class
+module-info.class
+soptecit\controladores\VentasController.class
+soptecit\controladores\LoginController.class
+soptecit\util\Tablas$2.class
+soptecit\util\Tablas.class
+soptecit\controladores\SeguimientoController.class
+soptecit\controladores\InicioController.class
+soptecit\controladores\DetalleFacturaController.class
+soptecit\controladores\CitasController.class
+soptecit\controladores\InstalacionesController.class
+soptecit\util\Mensajes.class
+soptecit\controladores\LevantamientosController.class
+soptecit\controladores\PrincipalController.class
+soptecit\controladores\AdministracionController.class
