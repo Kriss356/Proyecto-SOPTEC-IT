@@ -1,0 +1,42 @@
+# SOPTEC-IT — Sistema de control de información y soporte técnico
+
+Aplicación de escritorio en JavaFX + MySQL para la gestión de clientes, citas, levantamientos,
+proyectos, empleados, proveedores y materiales de SOPTEC-IT.
+
+## Requisitos
+- JDK 11 o superior y NetBeans (proyecto Maven).
+- XAMPP con MySQL/MariaDB encendido (usuario `root` sin contraseña, puerto 3306).
+
+## Instalación de la base de datos (solo la primera vez)
+1. Abre phpMyAdmin (http://localhost/phpmyadmin).
+2. Pestaña **Importar** → selecciona `database/soptec_it_completa.sql` → **Continuar**.
+   Se crea la base `soptec_it` con todas las tablas vacías, lista para capturar información real.
+
+> IMPORTANTE: `soptec_it_completa.sql` borra y vuelve a crear las tablas. No lo importes otra vez
+> cuando ya tengas información real capturada.
+>
+> `soptec_it_datos_prueba.sql` es solo para demostraciones: VACÍA todas las tablas y carga datos de
+> ejemplo. No lo uses con información real.
+
+## Ejecutar la aplicación
+En NetBeans: clic derecho al proyecto → **Run** (o `mvn clean javafx:run`).
+En la pantalla de acceso elige el área de trabajo. Todas las áreas ven Inicio y Seguimiento de proyectos, además de sus módulos:
+
+| Área | Módulos |
+|---|---|
+| Administrador general | Todos, incluida la bitácora de errores ("Logs y pruebas") |
+| Ventas | Ventas (clientes) y Citas |
+| Levantamientos | Levantamientos |
+| Administración | Administración (empleados) |
+| Compras-Almacén | Compras y almacén (proveedores y materiales) |
+| Instalaciones | Instalaciones |
+
+## Archivos que genera el sistema
+- Imágenes (clientes, empleados, proveedores, croquis): `Documentos\SOPTEC-IT\imagenes\` del usuario de Windows
+  (la carpeta se crea sola).
+- Registro de errores: `logs/soptec_errores.log` (sin contraseñas ni datos sensibles).
+
+## Pruebas automatizadas (JUnit 5)
+Clic derecho al proyecto → **Test**. Usan una base independiente `soptec_it_test` que se crea sola,
+así que nunca modifican la información de `soptec_it`. Resultados en `reportes/` y `logs/soptec_pruebas.log`.
+Detalle en `PRUEBAS_UNITARIAS_JUNIT5.md`.
