@@ -31,8 +31,43 @@ En la pantalla de acceso elige el área de trabajo. Todas las áreas ven Inicio 
 | Compras-Almacén | Compras y almacén (proveedores y materiales) |
 | Instalaciones | Instalaciones |
 
+## Portal del cliente (nuevo · 19/11/2026)
+En la pantalla de acceso hay un botón naranja **"Entrar como cliente"**. El cliente entra **solo con su número de
+teléfono** (10 dígitos, con teclado numérico en pantalla). Si el número no existe, se registra con su nombre
+(el correo es opcional). Todo está pensado para personas que casi no usan computadora: letra grande, botones grandes,
+una tarea por pantalla y mensajes sencillos.
+
+| Opción del cliente | Qué hace |
+|---|---|
+| Agendar una cita | Asistente de 3 pasos: servicio → día y hora (solo horarios libres, lunes a sábado de 9:00 a 17:00) → confirmar. Queda como **Solicitada**. |
+| Pedir una instalación | El mismo asistente, pero pide el domicilio (se guarda en la ficha del cliente). |
+| Comprar material | Tienda con el material del almacén que tiene existencias. Botones + / −; el pedido se **aparta** (se descuentan las piezas) y se paga al recoger. |
+| Mis citas y pedidos | Estado de sus citas, compras y proyectos con colores; puede cancelar lo que aún no se atiende. |
+
+Para el personal hay un módulo nuevo, **"Solicitudes de clientes"** (Administrador general, Ventas y Compras-Almacén):
+confirmar o rechazar citas solicitadas y marcar pedidos como *Listo para recoger*, *Entregado* o *Cancelado*
+(al cancelar, las piezas regresan al almacén).
+
+- Tablas nuevas: `pedido_cliente` y `pedido_cliente_material`. **Se crean solas** la primera vez; si prefieres crearlas
+  a mano, importa `database/soptec_it_portal_cliente.sql` (no borra nada). Las citas usan la tabla `cita` que ya existía.
+- Para la demostración con `soptec_it_datos_prueba.sql`, entra como cliente con el teléfono **3312345678** (Ana Gómez).
+- El teléfono de ayuda que ve el cliente está en `PortalClienteController.TELEFONO_AYUDA`.
+- El precio que ve el cliente es el `precio_costo` del material.
+
+## Ventas con servicios, relaciones muchos a muchos y tolerancia a fallos (nuevo · 20/11/2026)
+Práctica *CRUD con gestión de excepciones y tolerancia a fallos*. Detalle completo en `PRACTICA_CRUD_EXCEPCIONES.md`.
+
+- Tablas nuevas: `servicio`, `cita_servicio`, `venta`, `venta_servicio`; `pago` y `orden_compra` ganan columnas.
+  **Se crean solas** al abrir el sistema; si prefieres hacerlo a mano importa `database/soptec_it_ventas_servicios.sql` (no borra nada).
+- **Citas**: cada cita lleva su lista de servicios (se guardan juntos, con rollback si algo falla).
+- **Ventas › Ventas y facturación** (ya en MySQL): cliente → proyecto/cita sin recapturar → servicios → pago inicial, todo en una transacción.
+  **Ventas › Catálogo de servicios** con imagen.
+- **Administración › Personal por proyecto** (proyecto_empleado) y **Cuentas por cobrar** con abonos reales.
+- **Compras-Almacén › Órdenes de compra** (en MySQL; al recibir suben las existencias), **Material por proveedor** y **Material por proyecto**.
+- Errores diferenciados (validación, conexión, integridad, archivos, BD), rollback registrado en el log y manejador global que evita cierres inesperados.
+
 ## Archivos que genera el sistema
-- Imágenes (clientes, empleados, proveedores, croquis): `Documentos\SOPTEC-IT\imagenes\` del usuario de Windows
+- Imágenes (clientes, empleados, proveedores, croquis, servicios): `Documentos\SOPTEC-IT\imagenes\` del usuario de Windows
   (la carpeta se crea sola).
 - Registro de errores: `logs/soptec_errores.log` (sin contraseñas ni datos sensibles).
 

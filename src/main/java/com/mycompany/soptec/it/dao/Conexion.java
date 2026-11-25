@@ -95,6 +95,8 @@ public class Conexion {
         try {
             if (!con.getAutoCommit()) {
                 con.rollback();
+                AppLogger.registrarAdvertencia(modulo, "Conexion", operacion, "TRANSACCION_REVERTIDA",
+                        "Se ejecuto ROLLBACK: ninguna de las tablas involucradas quedo con registros parciales.");
             }
         } catch (SQLException ex) {
             AppLogger.registrarError(modulo, "Conexion", operacion + "_ROLLBACK", "OPERACION_BD",
@@ -108,7 +110,12 @@ public class Conexion {
         }
         try {
             if (!con.isClosed()) {
-                con.setAutoCommit(true);
+                // Si quedó una transacción sin confirmar (error no previsto), se revierte antes de cerrar:
+                // setAutoCommit(true) la confirmaría y dejaría registros parciales.
+                if (!con.getAutoCommit()) {
+                    con.rollback();
+                    con.setAutoCommit(true);
+                }
                 con.close();
             }
         } catch (SQLException ignored) {

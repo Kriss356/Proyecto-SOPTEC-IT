@@ -2,7 +2,9 @@
 
 Práctica: *Implementación de pruebas unitarias para la aplicación JavaFX* (actividad colaborativa del proyecto cuatrimestral).
 
-**Resultado de referencia:** 111 pruebas aprobadas, 0 fallidas (corrida con MySQL real sobre `soptec_it_test`). La prueba funcional de vistas JavaFX (`VistasFxmlTest`) se ejecuta en Windows desde NetBeans.
+> Actualizado el 20/11/2026: con la práctica de CRUD y excepciones ya son **144 pruebas** (ver `PRACTICA_CRUD_EXCEPCIONES.md`).
+
+**Resultado de referencia (19/11/2026):** 111 pruebas aprobadas, 0 fallidas (corrida con MySQL real sobre `soptec_it_test`). La prueba funcional de vistas JavaFX (`VistasFxmlTest`) se ejecuta en Windows desde NetBeans.
 
 ---
 

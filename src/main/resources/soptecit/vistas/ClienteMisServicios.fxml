@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- ================= PORTAL DEL CLIENTE | MIS CITAS, COMPRAS Y PROYECTOS ================= -->
+<VBox prefHeight="700.0" prefWidth="1100.0" spacing="20.0" styleClass="modulo" stylesheets="@../css/estilos.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="soptecit.controladores.ClienteMisServiciosController">
+   <children>
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+         <children>
+            <VBox spacing="4.0">
+               <children>
+                  <Label styleClass="portal-titulo" text="Mis citas y pedidos" />
+                  <Label styleClass="portal-subtexto" text="Aquí ves cómo va todo lo que nos pediste." />
+               </children>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnActualizar" mnemonicParsing="false" onAction="#actualizar" text="Actualizar">
+               <graphic>
+                  <SVGPath content="M20 11 A8 8 0 1 0 17.7 16.7 M20 5 V11 H14" styleClass="icono-boton" />
+               </graphic>
+               <styleClass>
+                  <String fx:value="boton-secundario" />
+                  <String fx:value="portal-boton-medio" />
+               </styleClass>
+            </Button>
+         </children>
+      </HBox>
+
+      <!-- Mis citas -->
+      <VBox spacing="12.0" styleClass="tarjeta">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="portal-seccion" text="Mis citas e instalaciones" />
+                  <Label fx:id="lblConteoCitas" styleClass="portal-texto-tenue" text="" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" onAction="#nuevaCita" text="Agendar otra cita">
+                     <styleClass>
+                        <String fx:value="boton-primario" />
+                        <String fx:value="portal-boton-medio" />
+                     </styleClass>
+                  </Button>
+               </children>
+            </HBox>
+            <VBox fx:id="listaCitas" spacing="10.0" />
+         </children>
+      </VBox>
+
+      <!-- Mis compras -->
+      <VBox spacing="12.0" styleClass="tarjeta">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <Label styleClass="portal-seccion" text="Mis compras" />
+                  <Label fx:id="lblConteoPedidos" styleClass="portal-texto-tenue" text="" />
+                  <Region HBox.hgrow="ALWAYS" />
+                  <Button mnemonicParsing="false" onAction="#irTienda" text="Ir a la tienda">
+                     <styleClass>
+                        <String fx:value="boton-exito" />
+                        <String fx:value="portal-boton-medio" />
+                     </styleClass>
+                  </Button>
+               </children>
+            </HBox>
+            <VBox fx:id="listaPedidos" spacing="10.0" />
+         </children>
+      </VBox>
+
+      <!-- Mis proyectos -->
+      <VBox spacing="12.0" styleClass="tarjeta">
+         <children>
+            <Label styleClass="portal-seccion" text="Mis proyectos con SOPTEC-IT" />
+            <Label styleClass="portal-texto-tenue" text="Si contrataste un proyecto (cableado, red, fibra óptica), aquí ves su avance." wrapText="true" />
+            <VBox fx:id="listaProyectos" spacing="10.0" />
+         </children>
+      </VBox>
+   </children>
+</VBox>

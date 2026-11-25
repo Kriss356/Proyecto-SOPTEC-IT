@@ -31,6 +31,22 @@ class VistasFxmlTest extends PruebaBD {
         "/soptecit/vistas/Instalaciones.fxml",
         "/soptecit/vistas/DetalleFactura.fxml",
         "/soptecit/vistas/LogsPruebas.fxml",
+        "/soptecit/vistas/SolicitudesClientes.fxml",
+        // Práctica CRUD con relaciones muchos a muchos (también se cargan dentro de Ventas, Administración y Compras)
+        "/soptecit/vistas/VentasFacturacion.fxml",
+        "/soptecit/vistas/CatalogoServicios.fxml",
+        "/soptecit/vistas/CuentasCobrar.fxml",
+        "/soptecit/vistas/PersonalProyecto.fxml",
+        "/soptecit/vistas/OrdenesCompra.fxml",
+        "/soptecit/vistas/MaterialProveedor.fxml",
+        "/soptecit/vistas/MaterialProyecto.fxml",
+        // Portal del cliente
+        "/soptecit/vistas/ClienteAcceso.fxml",
+        "/soptecit/vistas/PortalCliente.fxml",
+        "/soptecit/vistas/ClienteInicio.fxml",
+        "/soptecit/vistas/ClienteCita.fxml",
+        "/soptecit/vistas/ClienteTienda.fxml",
+        "/soptecit/vistas/ClienteMisServicios.fxml",
         "/fxml/MainCrud.fxml",
         "/fxml/ClientesView.fxml",
         "/fxml/TelefonosClienteView.fxml",
@@ -44,7 +60,7 @@ class VistasFxmlTest extends PruebaBD {
     };
 
     @Test
-    @DisplayName("Las 22 vistas FXML cargan con su controlador sin errores")
+    @DisplayName("Las 36 vistas FXML cargan con su controlador sin errores")
     void cargarTodasLasVistas() throws Exception {
         CountDownLatch inicio = new CountDownLatch(1);
         try {

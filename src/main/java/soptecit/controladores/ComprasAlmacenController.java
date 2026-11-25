@@ -2,12 +2,14 @@ package soptecit.controladores;
 
 import com.mycompany.soptec.it.modelo.Empleado;
 import com.mycompany.soptec.it.modelo.Material;
+import com.mycompany.soptec.it.modelo.PartidaMaterial;
 import com.mycompany.soptec.it.modelo.Proveedor;
 import com.mycompany.soptec.it.modelo.Proyecto;
 import com.mycompany.soptec.it.servicio.EmpleadoService;
 import com.mycompany.soptec.it.servicio.MaterialService;
 import com.mycompany.soptec.it.servicio.ProveedorService;
 import com.mycompany.soptec.it.servicio.ProyectoService;
+import com.mycompany.soptec.it.servicio.RelacionesService;
 import com.mycompany.soptec.it.util.AlertaUtil;
 import com.mycompany.soptec.it.util.GestorImagenes;
 import com.mycompany.soptec.it.util.Validador;
@@ -110,24 +112,16 @@ public class ComprasAlmacenController implements Initializable {
     @FXML private TextArea txtObservacionesMov;
     @FXML private TableView<String[]> tblMovimientos;
 
-    // 4. Órdenes de compra
-    @FXML private TableView<String[]> tblOrdenes;
-    @FXML private ComboBox<Proveedor> cmbProveedorOrden;
-    @FXML private ComboBox<Proyecto> cmbProyectoOrden;
-    @FXML private DatePicker dpEntregaOrden;
-    @FXML private ComboBox<Material> cmbMaterialOrden;
-    @FXML private TextField txtCantidadOrden;
-    @FXML private TableView<String[]> tblPartidas;
-    @FXML private Label lblTotalOrden;
+    // 4. Órdenes de compra, material por proveedor y material por proyecto: controladores propios
+    //    (OrdenesCompraController, MaterialProveedorController, MaterialProyectoController) con fx:include.
 
-    private double totalOrdenActual = 0;
-    private int consecutivoOrden = 46;
+    private final RelacionesService relacionesService = new RelacionesService();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         inicializarMateriales();
         inicializarProveedores();
-        inicializarMovimientosYOrdenes();
+        inicializarMovimientos();
         refrescarTodo();
     }
 
@@ -534,37 +528,28 @@ public class ComprasAlmacenController implements Initializable {
     // =========================================================================
     // 3 y 4. MOVIMIENTOS (ACTUALIZA STOCK EN MYSQL) Y ÓRDENES DE COMPRA
     // =========================================================================
-    private void inicializarMovimientosYOrdenes() {
+    private void inicializarMovimientos() {
         spnCantidadMov.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10000, 1));
         dpFechaMov.setValue(LocalDate.now());
-        dpEntregaOrden.setValue(LocalDate.now().plusDays(5));
 
         rbSalida.selectedProperty().addListener((o, a, salida) -> cmbProyectoMov.setDisable(!salida));
 
         Tablas.cargar(tblMovimientos, new String[][]{});
-        Tablas.cargar(tblPartidas, new String[][]{});
-        Tablas.cargar(tblOrdenes, new String[][]{
-            {"OC-0045", "Proveedor general", "PRY-0001", LocalDate.now().plusDays(3).toString(), "$18,400.00", "Solicitada"}
-        });
     }
 
     private void cargarCombosAuxiliares() {
         try {
             List<Material> mats = materialService.listar(false);
             cmbMaterialMov.setItems(FXCollections.observableArrayList(mats));
-            cmbMaterialOrden.setItems(FXCollections.observableArrayList(mats));
-
-            List<Proveedor> provs = proveedorService.listar(false);
-            cmbProveedorOrden.setItems(FXCollections.observableArrayList(provs));
 
             List<Proyecto> proys = proyectoService.listar(false);
             cmbProyectoMov.setItems(FXCollections.observableArrayList(proys));
-            cmbProyectoOrden.setItems(FXCollections.observableArrayList(proys));
 
             List<Empleado> emps = empleadoService.listar(false);
             cmbResponsableMov.setItems(FXCollections.observableArrayList(emps));
         } catch (Exception ex) {
-            // Ya reportado si falla BD
+            // El error ya quedó registrado en el log por el DAO; se avisa sin cerrar la ventana.
+            AlertaUtil.errorControlado(MOD_MAT, "CARGAR_COMBOS_ALMACEN", ex);
         }
     }
 
@@ -585,8 +570,26 @@ public class ComprasAlmacenController implements Initializable {
             return;
         }
         try {
-            mat.setExistencias(nuevaExistencia);
-            materialService.actualizar(mat);
+            Proyecto proyectoDestino = cmbProyectoMov.getValue();
+            if (!esEntrada && proyectoDestino != null) {
+                // Salida a un proyecto: se suma al material del proyecto (proyecto_material) y se descuenta
+                // del almacén en UNA transacción (RelacionesService/ProyectoMaterialDao).
+                List<PartidaMaterial> actuales = relacionesService.listarMaterialDeProyecto(proyectoDestino.getIdProyecto());
+                boolean encontrado = false;
+                for (PartidaMaterial pm : actuales) {
+                    if (pm.getIdMaterial() == mat.getIdMaterial()) {
+                        pm.setCantidad(pm.getCantidad() + cantidad);
+                        encontrado = true;
+                    }
+                }
+                if (!encontrado) {
+                    actuales.add(PartidaMaterial.de(mat, cantidad));
+                }
+                relacionesService.guardarMaterialDeProyecto(proyectoDestino.getIdProyecto(), actuales);
+            } else {
+                mat.setExistencias(nuevaExistencia);
+                materialService.actualizar(mat);
+            }
 
             String tipo = esEntrada ? "Entrada" : "Salida";
             String ref = esEntrada ? "Recepción almacén"
@@ -603,71 +606,6 @@ public class ComprasAlmacenController implements Initializable {
             refrescarTodo();
         } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_MAT, "REGISTRAR_MOVIMIENTO", ex);
-        }
-    }
-
-    @FXML
-    private void agregarPartida(ActionEvent event) {
-        Material mat = cmbMaterialOrden.getValue();
-        if (mat == null || txtCantidadOrden.getText().trim().isEmpty()) {
-            return;
-        }
-        try {
-            int cant = Integer.parseInt(txtCantidadOrden.getText().trim());
-            if (cant <= 0) {
-                return;
-            }
-            double precio = mat.getPrecioUnitario();
-            double importe = cant * precio;
-            totalOrdenActual += importe;
-            tblPartidas.getItems().add(new String[]{
-                mat.getDescripcionMaterial(), String.valueOf(cant), MONEDA.format(precio), MONEDA.format(importe)
-            });
-            lblTotalOrden.setText(MONEDA.format(totalOrdenActual));
-            txtCantidadOrden.clear();
-        } catch (NumberFormatException ex) {
-            Mensajes.error("Cantidad inválida", "Captura un número entero positivo.");
-        }
-    }
-
-    @FXML
-    private void generarOrden(ActionEvent event) {
-        Proveedor prov = cmbProveedorOrden.getValue();
-        if (prov == null || tblPartidas.getItems().isEmpty()) {
-            Mensajes.error("Faltan datos", "Selecciona el proveedor y agrega al menos una partida.");
-            return;
-        }
-        String proyTxt = cmbProyectoOrden.getValue() != null ? cmbProyectoOrden.getValue().getNombreProyecto() : "Stock general";
-        String entrega = dpEntregaOrden.getValue() != null ? dpEntregaOrden.getValue().toString() : "";
-        tblOrdenes.getItems().add(0, new String[]{
-            String.format("OC-%04d", consecutivoOrden++),
-            prov.getNombreProveedor(),
-            proyTxt,
-            entrega,
-            MONEDA.format(totalOrdenActual),
-            "Solicitada"
-        });
-        tblPartidas.getItems().clear();
-        totalOrdenActual = 0;
-        lblTotalOrden.setText("$0.00");
-        Mensajes.info("Orden generada", "La orden de compra para " + prov.getNombreProveedor() + " quedó registrada.");
-    }
-
-    @FXML
-    private void registrarRecepcion(ActionEvent event) {
-        String[] orden = tblOrdenes.getSelectionModel().getSelectedItem();
-        if (orden != null) {
-            orden[5] = "Recibida";
-            tblOrdenes.refresh();
-        }
-    }
-
-    @FXML
-    private void cancelarOrden(ActionEvent event) {
-        String[] orden = tblOrdenes.getSelectionModel().getSelectedItem();
-        if (orden != null && Mensajes.confirmar("Cancelar orden", "¿Cancelar la orden " + orden[0] + "?")) {
-            orden[5] = "Cancelada";
-            tblOrdenes.refresh();
         }
     }
 }

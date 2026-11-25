@@ -33,6 +33,7 @@ public class PrincipalController implements Initializable {
     @FXML private ToggleButton btnSeguimiento;
     @FXML private ToggleButton btnVentas;
     @FXML private ToggleButton btnCitas;
+    @FXML private ToggleButton btnSolicitudes;
     @FXML private ToggleButton btnLevantamientos;
     @FXML private ToggleButton btnAdministracion;
     @FXML private ToggleButton btnCompras;
@@ -85,6 +86,8 @@ public class PrincipalController implements Initializable {
 
         mostrar(btnVentas, esAdmin || "Ventas".equals(area));
         mostrar(btnCitas, esAdmin || "Ventas".equals(area));
+        // Lo que piden los clientes desde el Portal del cliente (citas y pedidos de la tienda).
+        mostrar(btnSolicitudes, esAdmin || "Ventas".equals(area) || "Compras-Almacén".equals(area));
         mostrar(btnLevantamientos, esAdmin || "Levantamientos".equals(area));
         mostrar(btnAdministracion, esAdmin || "Administración".equals(area));
         mostrar(btnCompras, esAdmin || "Compras-Almacén".equals(area));
@@ -170,7 +173,7 @@ public class PrincipalController implements Initializable {
             contenedor.setContent(vista);
             contenedor.setVvalue(0);
             actualizarEncabezado(modulo);
-        } catch (IOException ex) {
+        } catch (IOException | RuntimeException ex) {
             AppLogger.registrarExcepcion("Navegacion", "PrincipalController", "CARGAR_MODULO_" + modulo, ex);
             Mensajes.error("No se pudo abrir el módulo",
                     "Ocurrió un problema al cargar " + modulo + ". El detalle fue guardado en soptec_errores.log.");
@@ -187,6 +190,9 @@ public class PrincipalController implements Initializable {
                 break;
             case "Citas":
                 encabezado(btnCitas, "Citas", "Áreas  /  Ventas  /  Agenda y CRUD de citas");
+                break;
+            case "SolicitudesClientes":
+                encabezado(btnSolicitudes, "Solicitudes de clientes", "Áreas  /  Ventas  ·  Citas y pedidos que llegan desde el Portal del cliente");
                 break;
             case "Levantamientos":
                 encabezado(btnLevantamientos, "Levantamientos", "Áreas  /  Levantamientos  ·  Visitas, croquis y relación con proyectos");

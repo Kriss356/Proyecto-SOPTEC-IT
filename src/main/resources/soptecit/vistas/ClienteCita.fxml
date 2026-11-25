@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- ================= PORTAL DEL CLIENTE | AGENDAR CITA / INSTALACIÓN (asistente de 3 pasos) ================= -->
+<VBox prefHeight="700.0" prefWidth="1100.0" spacing="18.0" styleClass="modulo" stylesheets="@../css/estilos.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="soptecit.controladores.ClienteCitaController">
+   <fx:define>
+      <ToggleGroup fx:id="grupoServicio" />
+   </fx:define>
+   <children>
+
+      <!-- Encabezado e indicador de pasos -->
+      <HBox alignment="CENTER_LEFT" spacing="10.0">
+         <children>
+            <VBox spacing="4.0">
+               <children>
+                  <Label fx:id="lblTitulo" styleClass="portal-titulo" text="Agendar una cita" />
+                  <Label fx:id="lblSubtitulo" styleClass="portal-subtexto" text="Solo son 3 pasos sencillos." />
+               </children>
+            </VBox>
+            <Region HBox.hgrow="ALWAYS" />
+            <Label fx:id="lblPaso1" styleClass="paso-chip" text="1  Servicio" />
+            <Label fx:id="lblPaso2" styleClass="paso-chip" text="2  Día y hora" />
+            <Label fx:id="lblPaso3" styleClass="paso-chip" text="3  Confirmar" />
+         </children>
+      </HBox>
+
+      <StackPane styleClass="tarjeta" VBox.vgrow="ALWAYS">
+         <padding>
+            <Insets bottom="24.0" left="26.0" right="26.0" top="22.0" />
+         </padding>
+         <children>
+
+            <!-- PASO 1: ¿Qué necesitas? -->
+            <VBox fx:id="paso1" spacing="14.0">
+               <children>
+                  <Label styleClass="portal-seccion" text="¿Qué necesitas?" />
+                  <GridPane hgap="16.0">
+                     <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                        <ColumnConstraints hgrow="ALWAYS" percentWidth="25.0" />
+                     </columnConstraints>
+                     <children>
+                              <ToggleButton fx:id="tgReparacion" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" styleClass="opcion-servicio" text="Reparación de equipo" toggleGroup="$grupoServicio" wrapText="true" GridPane.columnIndex="0">
+                                 <graphic>
+                                    <StackPane minHeight="64.0" minWidth="64.0" styleClass="icono-azul">
+                                       <children>
+                                          <Circle radius="32.0" styleClass="portal-icono-fondo" />
+                                          <SVGPath content="M14.7 6.3 A4 4 0 0 0 9.6 11.4 L4 17 L7 20 L12.6 14.4 A4 4 0 0 0 17.7 9.3 L15.2 11.8 L12.2 8.8 Z" styleClass="portal-icono" />
+                                       </children>
+                                    </StackPane>
+                                 </graphic>
+                              </ToggleButton>
+                              <ToggleButton fx:id="tgInstalacion" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" styleClass="opcion-servicio" text="Instalación" toggleGroup="$grupoServicio" wrapText="true" GridPane.columnIndex="1">
+                                 <graphic>
+                                    <StackPane minHeight="64.0" minWidth="64.0" styleClass="icono-naranja">
+                                       <children>
+                                          <Circle radius="32.0" styleClass="portal-icono-fondo" />
+                                          <SVGPath content="M9 3 H15 V8 H9 Z M3 16 H9 V21 H3 Z M15 16 H21 V21 H15 Z M12 8 V12 M6 16 V12 H18 V16" styleClass="portal-icono" />
+                                       </children>
+                                    </StackPane>
+                                 </graphic>
+                              </ToggleButton>
+                              <ToggleButton fx:id="tgMantenimiento" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" styleClass="opcion-servicio" text="Mantenimiento" toggleGroup="$grupoServicio" wrapText="true" GridPane.columnIndex="2">
+                                 <graphic>
+                                    <StackPane minHeight="64.0" minWidth="64.0" styleClass="icono-verde">
+                                       <children>
+                                          <Circle radius="32.0" styleClass="portal-icono-fondo" />
+                                          <SVGPath content="M12 3 V6 M12 18 V21 M3 12 H6 M18 12 H21 M5.6 5.6 L7.8 7.8 M16.2 16.2 L18.4 18.4 M5.6 18.4 L7.8 16.2 M16.2 7.8 L18.4 5.6 M9 12 A3 3 0 1 0 15 12 A3 3 0 1 0 9 12 Z" styleClass="portal-icono" />
+                                       </children>
+                                    </StackPane>
+                                 </graphic>
+                              </ToggleButton>
+                              <ToggleButton fx:id="tgCotizacion" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" styleClass="opcion-servicio" text="Cotización / asesoría" toggleGroup="$grupoServicio" wrapText="true" GridPane.columnIndex="3">
+                                 <graphic>
+                                    <StackPane minHeight="64.0" minWidth="64.0" styleClass="icono-morado">
+                                       <children>
+                                          <Circle radius="32.0" styleClass="portal-icono-fondo" />
+                                          <SVGPath content="M4 5 H20 V16 H10 L6 20 V16 H4 Z M8 9.5 H16 M8 12.5 H13" styleClass="portal-icono" />
+                                       </children>
+                                    </StackPane>
+                                 </graphic>
+                              </ToggleButton>
+                     </children>
+                  </GridPane>
+
+                  <VBox fx:id="panelDomicilio" managed="false" spacing="8.0" visible="false">
+                     <children>
+                        <Label styleClass="portal-seccion" text="¿Dónde será la instalación?">
+                           <VBox.margin>
+                              <Insets top="6.0" />
+                           </VBox.margin>
+                        </Label>
+                        <HBox spacing="12.0">
+                           <children>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="portal-etiqueta" text="Calle *" />
+                                    <TextField fx:id="txtCalle" promptText="Ej. Av. Juárez" />
+                                 </children>
+                              </VBox>
+                              <VBox prefWidth="150.0" spacing="4.0">
+                                 <children>
+                                    <Label styleClass="portal-etiqueta" text="Número *" />
+                                    <TextField fx:id="txtNumero" promptText="Ej. 120-B" />
+                                 </children>
+                              </VBox>
+                              <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                                 <children>
+                                    <Label styleClass="portal-etiqueta" text="Colonia *" />
+                                    <TextField fx:id="txtColonia" promptText="Ej. Centro" />
+                                 </children>
+                              </VBox>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <Label styleClass="portal-etiqueta" text="Cuéntanos brevemente qué necesitas (opcional)">
+                     <VBox.margin>
+                        <Insets top="4.0" />
+                     </VBox.margin>
+                  </Label>
+                  <TextArea fx:id="txtNota" prefRowCount="3" promptText="Ej. Mi computadora no enciende  /  Quiero internet en 3 cuartos" wrapText="true" />
+               </children>
+            </VBox>
+
+            <!-- PASO 2: Día y hora -->
+            <VBox fx:id="paso2" managed="false" spacing="14.0" visible="false">
+               <children>
+                  <Label styleClass="portal-seccion" text="1. Elige el día" />
+                  <FlowPane fx:id="flowDias" hgap="10.0" vgap="10.0" />
+                  <HBox alignment="CENTER_LEFT" spacing="12.0">
+                     <VBox.margin>
+                        <Insets top="8.0" />
+                     </VBox.margin>
+                     <children>
+                        <Label fx:id="lblTituloHoras" styleClass="portal-seccion" text="2. Elige la hora" />
+                        <Label styleClass="portal-texto-tenue" text="Las horas en gris ya están ocupadas." />
+                     </children>
+                  </HBox>
+                  <FlowPane fx:id="flowHoras" hgap="10.0" vgap="10.0" />
+                  <Label fx:id="lblSinHoras" managed="false" styleClass="portal-aviso" text="Ese día ya no tenemos horarios libres. Elige otro día, por favor." visible="false" wrapText="true" />
+               </children>
+            </VBox>
+
+            <!-- PASO 3: Confirmar -->
+            <VBox fx:id="paso3" managed="false" spacing="16.0" visible="false">
+               <children>
+                  <Label styleClass="portal-seccion" text="Revisa que todo esté bien" />
+                  <GridPane hgap="24.0" vgap="14.0">
+                     <columnConstraints>
+                        <ColumnConstraints minWidth="200.0" />
+                        <ColumnConstraints hgrow="ALWAYS" />
+                     </columnConstraints>
+                     <children>
+                              <Label styleClass="resumen-etiqueta" text="Servicio" GridPane.rowIndex="0" />
+                              <Label fx:id="lblResServicio" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                              <Label styleClass="resumen-etiqueta" text="Día" GridPane.rowIndex="1" />
+                              <Label fx:id="lblResDia" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                              <Label styleClass="resumen-etiqueta" text="Hora" GridPane.rowIndex="2" />
+                              <Label fx:id="lblResHora" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                              <Label styleClass="resumen-etiqueta" text="Domicilio" GridPane.rowIndex="3" />
+                              <Label fx:id="lblResDomicilio" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                              <Label styleClass="resumen-etiqueta" text="Lo que nos contaste" GridPane.rowIndex="4" />
+                              <Label fx:id="lblResNota" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                              <Label styleClass="resumen-etiqueta" text="Te llamaremos al" GridPane.rowIndex="5" />
+                              <Label fx:id="lblResTelefono" maxWidth="1.7976931348623157E308" styleClass="resumen-valor" text="-" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                     </children>
+                  </GridPane>
+                  <Label maxWidth="1.7976931348623157E308" styleClass="portal-aviso" text="Tu cita quedará «Esperando confirmación». Te llamaremos para confirmarla. Si algo está mal, toca «Regresar»." wrapText="true" />
+               </children>
+            </VBox>
+
+            <!-- LISTO -->
+            <VBox fx:id="pasoListo" alignment="CENTER" managed="false" spacing="14.0" visible="false">
+               <children>
+                  <StackPane>
+                     <children>
+                        <Circle radius="46.0" styleClass="circulo-exito" />
+                        <SVGPath content="M6 12.5 L10.5 17 L18.5 8" styleClass="marca-exito" />
+                     </children>
+                  </StackPane>
+                  <Label styleClass="portal-titulo" text="¡Listo! Ya recibimos tu solicitud" />
+                  <Label fx:id="lblListoDetalle" maxWidth="640.0" styleClass="portal-subtexto" text="Detalle" textAlignment="CENTER" wrapText="true" />
+                  <HBox alignment="CENTER" spacing="14.0">
+                     <VBox.margin>
+                        <Insets top="10.0" />
+                     </VBox.margin>
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#irInicio" text="Volver al inicio">
+                           <styleClass>
+                              <String fx:value="boton-secundario" />
+                              <String fx:value="portal-boton-grande" />
+                           </styleClass>
+                        </Button>
+                        <Button mnemonicParsing="false" onAction="#verMisCitas" text="Ver mis citas">
+                           <styleClass>
+                              <String fx:value="boton-primario" />
+                              <String fx:value="portal-boton-grande" />
+                           </styleClass>
+                        </Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </StackPane>
+
+      <!-- Navegación entre pasos -->
+      <HBox fx:id="barraNavegacion" alignment="CENTER_LEFT" spacing="14.0">
+         <children>
+            <Button fx:id="btnAtras" mnemonicParsing="false" onAction="#atras" text="Regresar">
+               <graphic>
+                  <SVGPath content="M15 6 L9 12 L15 18" styleClass="icono-boton" />
+               </graphic>
+               <styleClass>
+                  <String fx:value="boton-secundario" />
+                  <String fx:value="portal-boton-grande" />
+               </styleClass>
+            </Button>
+            <Label fx:id="lblError" managed="false" maxWidth="1.7976931348623157E308" styleClass="mensaje-error" text="Mensaje" visible="false" wrapText="true" HBox.hgrow="ALWAYS" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="btnSiguiente" defaultButton="true" mnemonicParsing="false" onAction="#siguiente" text="Siguiente">
+               <styleClass>
+                  <String fx:value="boton-primario" />
+                  <String fx:value="portal-boton-grande" />
+               </styleClass>
+            </Button>
+         </children>
+      </HBox>
+   </children>
+</VBox>

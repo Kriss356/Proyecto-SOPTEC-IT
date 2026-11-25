@@ -3,6 +3,9 @@ package soptecit.controladores;
 import com.mycompany.soptec.it.excepciones.ValidacionException;
 import com.mycompany.soptec.it.modelo.Cita;
 import com.mycompany.soptec.it.modelo.Cliente;
+import com.mycompany.soptec.it.modelo.DetalleServicio;
+import com.mycompany.soptec.it.modelo.Servicio;
+import com.mycompany.soptec.it.servicio.ServicioService;
 import com.mycompany.soptec.it.servicio.CitaService;
 import com.mycompany.soptec.it.servicio.ClienteService;
 import com.mycompany.soptec.it.util.AlertaUtil;
@@ -22,10 +25,12 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.Spinner;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import soptecit.util.EditorDetalle;
 import soptecit.util.Tablas;
 
 /**
@@ -62,6 +67,15 @@ public class CitasController implements Initializable {
     @FXML private ComboBox<String> cmbEstadoCita;
     @FXML private TextArea txtObservaciones;
 
+    // Servicios de la cita (M:N cita_servicio)
+    @FXML private ComboBox<Servicio> cmbServicioCita;
+    @FXML private Spinner<Integer> spnCantidadServicio;
+    @FXML private TableView<DetalleServicio> tblServiciosCita;
+    @FXML private Label lblTotalServiciosCita;
+
+    private final ServicioService servicioService = new ServicioService();
+    private EditorDetalle<Servicio, DetalleServicio> editorServicios;
+
     private Cita seleccionado;
 
     @Override
@@ -71,7 +85,7 @@ public class CitasController implements Initializable {
             cmbHora.getItems().add(String.format("%02d:30", h));
         }
         cmbHora.setValue("09:00");
-        cmbEstadoCita.getItems().addAll("Programada", "Confirmada", "Atendida", "Cancelada");
+        cmbEstadoCita.getItems().addAll("Solicitada", "Programada", "Confirmada", "Atendida", "Cancelada");
         cmbEstadoCita.setValue("Programada");
         cmbFiltroEstado.setValue("Todas");
         dpFechaCita.setValue(LocalDate.now());
@@ -108,8 +122,39 @@ public class CitasController implements Initializable {
             }
         });
 
+        editorServicios = new EditorDetalle<>(cmbServicioCita, spnCantidadServicio, tblServiciosCita,
+                lblTotalServiciosCita, "Total estimado: ", "Sin servicios: agrega al menos uno",
+                EditorDetalle.adaptador(DetalleServicio::de, Servicio::getIdServicio, DetalleServicio::getIdServicio,
+                        DetalleServicio::getNombreServicio, DetalleServicio::getCantidad, DetalleServicio::setCantidad,
+                        DetalleServicio::getPrecioUnitario, DetalleServicio::getImporte));
+
         cargarComboClientes();
+        cargarCatalogoServicios();
         cargarTabla(null);
+    }
+
+    private void cargarCatalogoServicios() {
+        try {
+            editorServicios.setCatalogo(servicioService.listar(false));
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MODULO, "CARGAR_CATALOGO_SERVICIOS", ex);
+        }
+    }
+
+    @FXML
+    private void agregarServicio(ActionEvent event) {
+        String aviso = editorServicios.agregarSeleccion();
+        if (aviso != null) {
+            AlertaUtil.advertencia("Agregar servicio", aviso);
+        }
+    }
+
+    @FXML
+    private void quitarServicio(ActionEvent event) {
+        String aviso = editorServicios.quitarSeleccion();
+        if (aviso != null) {
+            AlertaUtil.advertencia("Quitar servicio", aviso);
+        }
     }
 
     private void cargarComboClientes() {
@@ -126,6 +171,7 @@ public class CitasController implements Initializable {
         try {
             if (event != null) {
                 cargarComboClientes();
+                cargarCatalogoServicios();
             }
             List<Cita> lista = aplicarFiltroEstado(service.listar(chkInactivos.isSelected()));
             mostrarEnTabla(lista);
@@ -187,10 +233,13 @@ public class CitasController implements Initializable {
     @FXML
     private void guardarCita(ActionEvent event) {
         try {
-            Cita creada = service.crear(construirDesdeFormulario(new Cita(), "CREAR_CITA"));
+            List<DetalleServicio> servicios = editorServicios.getRenglones();
+            Cita creada = service.crearConServicios(construirDesdeFormulario(new Cita(), "CREAR_CITA_CON_SERVICIOS"),
+                    servicios);
             AlertaUtil.info("Cita agendada",
-                    "Se registró la cita para " + creada.getClienteDescriptivo()
-                    + " el " + creada.getFechaCita() + " a las " + creada.getHoraCita() + ".");
+                    "Se registró la cita #" + creada.getIdCita() + " para " + creada.getClienteDescriptivo()
+                    + " el " + creada.getFechaCita() + " a las " + creada.getHoraCita()
+                    + (servicios.isEmpty() ? "." : " con " + servicios.size() + " servicio(s)."));
             limpiar(null);
             cargarTabla(null);
         } catch (Exception ex) {
@@ -205,9 +254,9 @@ public class CitasController implements Initializable {
             return;
         }
         try {
-            Cita editada = construirDesdeFormulario(seleccionado, "ACTUALIZAR_CITA");
-            service.actualizar(editada);
-            AlertaUtil.info("Cita actualizada", "Se actualizó la cita correctamente.");
+            Cita editada = construirDesdeFormulario(seleccionado, "ACTUALIZAR_CITA_CON_SERVICIOS");
+            service.actualizarConServicios(editada, editorServicios.getRenglones());
+            AlertaUtil.info("Cita actualizada", "Se actualizó la cita y sus servicios correctamente.");
             limpiar(null);
             cargarTabla(null);
         } catch (Exception ex) {
@@ -320,6 +369,7 @@ public class CitasController implements Initializable {
         cmbHora.getEditor().setText("09:00");
         cmbEstadoCita.setValue("Programada");
         txtObservaciones.clear();
+        editorServicios.limpiar();
         tblCitas.getSelectionModel().clearSelection();
     }
 
@@ -337,6 +387,12 @@ public class CitasController implements Initializable {
         cmbHora.getEditor().setText(horaStr);
         cmbEstadoCita.setValue(c.getEstadoCita());
         txtObservaciones.setText(c.getObservaciones() == null ? "" : c.getObservaciones());
+        try {
+            editorServicios.setRenglones(service.listarServicios(c.getIdCita()));
+        } catch (Exception ex) {
+            editorServicios.setRenglones(List.of());
+            AlertaUtil.errorControlado(MODULO, "LISTAR_SERVICIOS_CITA", ex);
+        }
     }
 
     private Cita construirDesdeFormulario(Cita base, String op) throws Exception {

@@ -28,6 +28,7 @@ public class LoginController implements Initializable {
     @FXML private CheckBox chkRecordar;
     @FXML private Label lblError;
     @FXML private Button btnIngresar;
+    @FXML private Button btnSoyCliente;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -64,6 +65,18 @@ public class LoginController implements Initializable {
         } catch (IOException ex) {
             AppLogger.registrarExcepcion("Autenticacion", "LoginController", "ABRIR_PRINCIPAL", ex);
             mostrarError("No se pudo abrir la ventana principal. Revisa el archivo de log.");
+        }
+    }
+
+    /** Abre el Portal del cliente (el cliente entra solo con su número de teléfono). */
+    @FXML
+    private void abrirPortalCliente(ActionEvent event) {
+        try {
+            Parent portal = FXMLLoader.load(getClass().getResource("/soptecit/vistas/ClienteAcceso.fxml"));
+            btnIngresar.getScene().setRoot(portal);
+        } catch (IOException ex) {
+            AppLogger.registrarExcepcion("Portal cliente", "LoginController", "ABRIR_PORTAL_CLIENTE", ex);
+            mostrarError("No se pudo abrir el portal del cliente. Revisa el archivo de log.");
         }
     }
 

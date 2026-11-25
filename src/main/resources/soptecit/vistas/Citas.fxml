@@ -8,6 +8,8 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -47,6 +49,7 @@
                      <items>
                         <FXCollections fx:factory="observableArrayList">
                            <String fx:value="Todas" />
+                           <String fx:value="Solicitada" />
                            <String fx:value="Programada" />
                            <String fx:value="Confirmada" />
                            <String fx:value="Atendida" />
@@ -94,7 +97,9 @@
       </VBox>
 
       <!-- ===================== FORMULARIO CRUD CITA ===================== -->
-      <VBox minWidth="365.0" prefWidth="390.0" spacing="9.0" styleClass="tarjeta">
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="385.0" prefWidth="410.0" styleClass="panel-scroll">
+         <content>
+      <VBox spacing="9.0" styleClass="tarjeta">
          <children>
             <Label fx:id="lblModoFormulario" styleClass="tarjeta-titulo" text="Agendar nueva cita" />
             <Label styleClass="tarjeta-subtitulo" text="Registra o edita citas asociadas a clientes activos" />
@@ -154,12 +159,45 @@
                   <ComboBox fx:id="cmbEstadoCita" maxWidth="1.7976931348623157E308" promptText="Seleccionar estado" />
                </children>
             </VBox>
-            <VBox spacing="4.0" VBox.vgrow="ALWAYS">
+            <VBox spacing="4.0">
                <children>
                   <Label styleClass="etiqueta-campo" text="Observaciones / necesidades del cliente" />
-                  <TextArea fx:id="txtObservaciones" minHeight="75.0" prefRowCount="3" promptText="Describe el servicio solicitado o notas de la visita..." wrapText="true" VBox.vgrow="ALWAYS" />
+                  <TextArea fx:id="txtObservaciones" minHeight="55.0" prefHeight="60.0" prefRowCount="2" promptText="Notas de la visita..." wrapText="true" />
                </children>
             </VBox>
+
+            <!-- ===== Servicios de la cita (relación muchos a muchos cita_servicio) ===== -->
+            <Separator styleClass="separador" />
+            <Label styleClass="seccion-titulo" text="SERVICIOS DE LA CITA" />
+            <Label styleClass="texto-ayuda" text="Elige del catálogo, indica la cantidad y presiona +. Se guardan junto con la cita." wrapText="true" />
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <ComboBox fx:id="cmbServicioCita" maxWidth="1.7976931348623157E308" promptText="Servicio del catálogo" HBox.hgrow="ALWAYS" />
+                  <Spinner fx:id="spnCantidadServicio" editable="true" minWidth="92.0" prefWidth="92.0" />
+                  <Button mnemonicParsing="false" onAction="#agregarServicio" styleClass="boton-primario, boton-compacto" text="+">
+                     <tooltip>
+                        <Tooltip text="Agregar el servicio a la cita" />
+                     </tooltip>
+                  </Button>
+               </children>
+            </HBox>
+            <TableView fx:id="tblServiciosCita" minHeight="95.0" prefHeight="115.0">
+               <columns>
+                  <TableColumn prefWidth="160.0" text="Servicio" />
+                  <TableColumn prefWidth="45.0" text="Cant." />
+                  <TableColumn prefWidth="75.0" text="Precio" />
+                  <TableColumn prefWidth="80.0" text="Importe" />
+               </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+            </TableView>
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <Label fx:id="lblTotalServiciosCita" maxWidth="1.7976931348623157E308" styleClass="texto-tenue" text="Total estimado: \$0.00" wrapText="true" HBox.hgrow="ALWAYS" />
+                  <Button minWidth="72.0" mnemonicParsing="false" onAction="#quitarServicio" styleClass="boton-peligro, boton-compacto" text="Quitar" />
+               </children>
+            </HBox>
 
             <HBox spacing="8.0">
                <children>
@@ -177,5 +215,7 @@
             </HBox>
          </children>
       </VBox>
+         </content>
+      </ScrollPane>
    </children>
 </HBox>

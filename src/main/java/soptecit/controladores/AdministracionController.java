@@ -8,10 +8,8 @@ import com.mycompany.soptec.it.util.AlertaUtil;
 import com.mycompany.soptec.it.util.AppLogger;
 import com.mycompany.soptec.it.util.GestorImagenes;
 import com.mycompany.soptec.it.util.Validador;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -22,7 +20,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -82,16 +79,7 @@ public class AdministracionController implements Initializable {
     @FXML private Label lblMontoExp;
     @FXML private TextArea txtComentariosExp;
 
-    // ---- 3. Cuentas por cobrar ----
-    @FXML private Label lblSaldoTotal;
-    @FXML private Label lblFacturasPendientes;
-    @FXML private Label lblPagosRecibidos;
-    @FXML private Label lblPagosVencidos;
-    @FXML private TableView<String[]> tblCuentas;
-    @FXML private ComboBox<Proyecto> cmbProyectoPago;
-    @FXML private Label lblSaldoFactura;
-    @FXML private DatePicker dpFechaPago;
-    @FXML private TextField txtMontoPago;
+    // ---- 3. Cuentas por cobrar: ahora en CuentasCobrarController (pestaña incluida con fx:include) ----
 
     // ---- 4. Revisión final ----
     @FXML private TableView<Proyecto> tblRevisionFinal;
@@ -328,11 +316,9 @@ public class AdministracionController implements Initializable {
     }
 
     // =========================================================================
-    // 2, 3 y 4. EXPEDIENTES, COBRANZA Y REVISIÓN FINAL (CONECTADOS A PROYECTOS)
+    // 2 y 4. EXPEDIENTES Y REVISIÓN FINAL (CONECTADOS A PROYECTOS)
     // =========================================================================
     private void inicializarExpedientesYRevision() {
-        dpFechaPago.setValue(LocalDate.now());
-
         colExpId.setCellValueFactory(d -> new SimpleStringProperty("PRY-" + String.format("%04d", d.getValue().getIdProyecto())));
         colExpCliente.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getClienteDescriptivo()));
         colExpNombre.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNombreProyecto()));
@@ -350,9 +336,6 @@ public class AdministracionController implements Initializable {
                 lblMontoExp.setText(MONEDA.format(p.getCostoTotal()) + " + IVA");
             }
         });
-
-        cmbProyectoPago.valueProperty().addListener((o, a, p) ->
-                lblSaldoFactura.setText(p == null ? "$0.00" : MONEDA.format(p.getCostoTotal())));
 
         colRevId.setCellValueFactory(d -> new SimpleStringProperty("PRY-" + String.format("%04d", d.getValue().getIdProyecto())));
         colRevProyecto.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNombreProyecto()));
@@ -375,33 +358,6 @@ public class AdministracionController implements Initializable {
             List<Proyecto> proyectos = proyectoService.listar(false);
             tblExpedientes.setItems(FXCollections.observableArrayList(proyectos));
             tblRevisionFinal.setItems(FXCollections.observableArrayList(proyectos));
-            cmbProyectoPago.setItems(FXCollections.observableArrayList(proyectos));
-
-            BigDecimal total = proyectos.stream()
-                    .map(p -> p.getCostoTotal() != null ? p.getCostoTotal() : BigDecimal.ZERO)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            long finalizados = proyectos.stream()
-                    .filter(p -> "Finalizado".equalsIgnoreCase(p.getEstado())).count();
-            long revision = proyectos.stream()
-                    .filter(p -> p.getEstado() != null && p.getEstado().toLowerCase().contains("revisi")).count();
-
-            lblSaldoTotal.setText(MONEDA.format(total));
-            lblFacturasPendientes.setText(String.valueOf(proyectos.size()));
-            lblPagosRecibidos.setText(String.valueOf(finalizados));
-            lblPagosVencidos.setText(String.valueOf(revision));
-
-            String[][] filasCuentas = new String[proyectos.size()][5];
-            for (int i = 0; i < proyectos.size(); i++) {
-                Proyecto p = proyectos.get(i);
-                filasCuentas[i] = new String[]{
-                    "PRY-" + String.format("%04d", p.getIdProyecto()),
-                    p.getClienteNombre() != null ? p.getClienteNombre() : "Sin cliente",
-                    p.getNombreProyecto(),
-                    MONEDA.format(p.getCostoTotal()),
-                    p.getEstado() != null ? p.getEstado() : "Planeado"
-                };
-            }
-            Tablas.cargar(tblCuentas, filasCuentas);
         } catch (Exception ex) {
             AppLogger.registrarExcepcion(MOD_ADM, "AdministracionController", "CARGAR_EXPEDIENTES", ex);
         }
@@ -443,19 +399,6 @@ public class AdministracionController implements Initializable {
         } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_ADM, "RECHAZAR_PROYECTO", ex);
         }
-    }
-
-    @FXML
-    private void registrarPago(ActionEvent event) {
-        Proyecto p = cmbProyectoPago.getValue();
-        if (p == null || txtMontoPago.getText().trim().isEmpty()) {
-            Mensajes.error("Faltan datos", "Selecciona el proyecto e indica el monto del pago.");
-            return;
-        }
-        AppLogger.registrarInfo(MOD_ADM, "AdministracionController", "REGISTRAR_PAGO",
-                "Pago registrado para proyecto #" + p.getIdProyecto() + " por $" + txtMontoPago.getText().trim());
-        Mensajes.info("Pago registrado", "Se registró el abono para '" + p.getNombreProyecto() + "'.");
-        txtMontoPago.clear();
     }
 
     @FXML

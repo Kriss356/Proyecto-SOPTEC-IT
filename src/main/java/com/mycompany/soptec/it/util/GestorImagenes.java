@@ -36,7 +36,7 @@ public final class GestorImagenes {
 
     public static final String NOMBRE_CARPETA_APP = "SOPTEC-IT";
     public static final Set<String> EXTENSIONES_VALIDAS = Set.of("png", "jpg", "jpeg", "gif", "bmp");
-    public static final Set<String> SUBCARPETAS_VALIDAS = Set.of("clientes", "empleados", "proveedores", "croquis");
+    public static final Set<String> SUBCARPETAS_VALIDAS = Set.of("clientes", "empleados", "proveedores", "croquis", "servicios");
     /** Tamaño máximo permitido por imagen: 10 MB. */
     public static final long TAMANO_MAXIMO_BYTES = 10L * 1024 * 1024;
 

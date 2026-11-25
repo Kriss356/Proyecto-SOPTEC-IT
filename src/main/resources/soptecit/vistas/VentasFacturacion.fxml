@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- ================= VENTAS Y FACTURACIÓN: venta + servicios (M:N venta_servicio) + pago inicial ================= -->
+<HBox spacing="20.0" stylesheets="@../css/estilos.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="soptecit.controladores.VentasFacturacionController">
+   <children>
+
+      <!-- ===================== HISTORIAL DE VENTAS ===================== -->
+      <VBox spacing="12.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+               <children>
+                  <VBox>
+                     <children>
+                        <Label styleClass="tarjeta-titulo" text="Ventas y facturas" />
+                        <Label styleClass="tarjeta-subtitulo" text="Doble clic en una venta para ver la factura o imprimirla" />
+                     </children>
+                  </VBox>
+                  <Region HBox.hgrow="ALWAYS" />
+                  <CheckBox fx:id="chkCanceladas" mnemonicParsing="false" onAction="#cargarVentas" text="Mostrar canceladas" />
+               </children>
+            </HBox>
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <TextField fx:id="txtBuscarVenta" onAction="#cargarVentas" promptText="Buscar por folio, cliente, RFC o proyecto..." HBox.hgrow="ALWAYS" />
+                  <ComboBox fx:id="cmbFiltroEstadoVenta" prefWidth="130.0" promptText="Estado">
+                     <items>
+                        <FXCollections fx:factory="observableArrayList">
+                           <String fx:value="Todas" />
+                           <String fx:value="Pendiente" />
+                           <String fx:value="Parcial" />
+                           <String fx:value="Pagada" />
+                           <String fx:value="Cancelada" />
+                        </FXCollections>
+                     </items>
+                  </ComboBox>
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#cargarVentas" styleClass="boton-primario, boton-compacto" text="Buscar" />
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#refrescarTodo" styleClass="boton-secundario, boton-compacto" text="Refrescar" />
+               </children>
+            </HBox>
+            <TableView fx:id="tblVentas" minHeight="240.0" VBox.vgrow="ALWAYS">
+               <columns>
+                  <TableColumn fx:id="colVenFolio" prefWidth="70.0" text="Folio" />
+                  <TableColumn fx:id="colVenCliente" prefWidth="140.0" text="Cliente" />
+                  <TableColumn fx:id="colVenProyecto" prefWidth="120.0" text="Proyecto" />
+                  <TableColumn fx:id="colVenFecha" prefWidth="82.0" text="Fecha" />
+                  <TableColumn fx:id="colVenTotal" prefWidth="90.0" text="Total" />
+                  <TableColumn fx:id="colVenSaldo" prefWidth="90.0" text="Saldo" />
+                  <TableColumn fx:id="colVenEstado" prefWidth="90.0" styleClass="col-estado" text="Estado" />
+               </columns>
+               <columnResizePolicy>
+                  <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+            </TableView>
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+               <children>
+                  <Label fx:id="lblResumenVentas" maxWidth="1.7976931348623157E308" styleClass="texto-tenue" text="0 ventas" wrapText="true" HBox.hgrow="ALWAYS" />
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#verFactura" styleClass="boton-primario, boton-compacto" text="Ver factura" />
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#cancelarVenta" styleClass="boton-naranja, boton-compacto" text="Cancelar" />
+                  <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#eliminarVenta" styleClass="boton-peligro, boton-compacto" text="Eliminar" />
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+
+      <!-- ===================== FORMULARIO DE VENTA ===================== -->
+      <ScrollPane fitToWidth="true" hbarPolicy="NEVER" minWidth="400.0" prefWidth="425.0" styleClass="panel-scroll">
+         <content>
+            <VBox spacing="9.0" styleClass="tarjeta">
+               <children>
+                  <Label fx:id="lblModoVenta" styleClass="tarjeta-titulo" text="Nueva venta" />
+                  <Label minHeight="-Infinity" styleClass="tarjeta-subtitulo" text="La venta, sus servicios y el pago inicial se guardan juntos: si algo falla no se guarda nada." wrapText="true" />
+
+                  <Label styleClass="seccion-titulo" text="CLIENTE Y ORIGEN" />
+                  <TextField fx:id="txtFiltroClienteVenta" promptText="Filtrar cliente por nombre o RFC..." />
+                  <ComboBox fx:id="cmbClienteVenta" maxWidth="1.7976931348623157E308" promptText="Cliente *" />
+                  <Label fx:id="lblInfoClienteVenta" styleClass="texto-ayuda" text="Selecciona el cliente: se cargan sus proyectos y citas." wrapText="true" />
+                  <VBox spacing="4.0">
+                     <children>
+                        <Label styleClass="etiqueta-campo" text="Proyecto (opcional)" />
+                        <ComboBox fx:id="cmbProyectoVenta" maxWidth="1.7976931348623157E308" promptText="Sin proyecto" />
+                     </children>
+                  </VBox>
+                  <VBox spacing="4.0">
+                     <children>
+                        <Label styleClass="etiqueta-campo" text="Cargar servicios desde una cita (opcional)" />
+                        <HBox spacing="8.0">
+                           <children>
+                              <ComboBox fx:id="cmbCitaVenta" maxWidth="1.7976931348623157E308" promptText="Citas del cliente" HBox.hgrow="ALWAYS" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#cargarServiciosDeCita" styleClass="boton-secundario, boton-compacto" text="Cargar">
+                                 <tooltip>
+                                    <Tooltip text="Copia a la venta los servicios de la cita, sin volver a capturarlos" />
+                                 </tooltip>
+                              </Button>
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  <HBox spacing="10.0">
+                     <children>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Fecha de venta *" />
+                              <DatePicker fx:id="dpFechaVenta" maxWidth="1.7976931348623157E308" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Vencimiento" />
+                              <DatePicker fx:id="dpVencimientoVenta" maxWidth="1.7976931348623157E308" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+
+                  <Separator styleClass="separador" />
+                  <Label styleClass="seccion-titulo" text="SERVICIOS VENDIDOS" />
+                  <HBox alignment="CENTER_LEFT" spacing="8.0">
+                     <children>
+                        <ComboBox fx:id="cmbServicioVenta" maxWidth="1.7976931348623157E308" promptText="Servicio del catálogo" HBox.hgrow="ALWAYS" />
+                        <Spinner fx:id="spnCantidadVenta" editable="true" minWidth="92.0" prefWidth="92.0" />
+                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#agregarServicio" styleClass="boton-primario, boton-compacto" text="+">
+                           <tooltip>
+                              <Tooltip text="Agregar el servicio a la venta" />
+                           </tooltip>
+                        </Button>
+                     </children>
+                  </HBox>
+                  <TableView fx:id="tblServiciosVenta" minHeight="100.0" prefHeight="125.0">
+                     <columns>
+                        <TableColumn prefWidth="160.0" text="Servicio" />
+                        <TableColumn prefWidth="45.0" text="Cant." />
+                        <TableColumn prefWidth="75.0" text="Precio" />
+                        <TableColumn prefWidth="80.0" text="Importe" />
+                     </columns>
+                     <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                     </columnResizePolicy>
+                  </TableView>
+                  <HBox alignment="CENTER_LEFT" spacing="8.0">
+                     <children>
+                        <Label fx:id="lblRenglonesVenta" maxWidth="1.7976931348623157E308" styleClass="texto-tenue" text="0 renglones" HBox.hgrow="ALWAYS" />
+                        <Button minWidth="72.0" mnemonicParsing="false" onAction="#quitarServicio" styleClass="boton-peligro, boton-compacto" text="Quitar" />
+                     </children>
+                  </HBox>
+                  <VBox styleClass="item-lista">
+                     <children>
+                        <HBox>
+                           <children>
+                              <Label styleClass="texto-tenue" text="Subtotal" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblSubtotalVenta" styleClass="texto-valor" text="\$0.00" />
+                           </children>
+                        </HBox>
+                        <HBox>
+                           <children>
+                              <Label styleClass="texto-tenue" text="IVA (16 %)" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblIvaVenta" styleClass="texto-valor" text="\$0.00" />
+                           </children>
+                        </HBox>
+                        <HBox alignment="CENTER_LEFT">
+                           <VBox.margin>
+                              <Insets top="4.0" />
+                           </VBox.margin>
+                           <children>
+                              <Label styleClass="tarjeta-titulo" text="Total" />
+                              <Region HBox.hgrow="ALWAYS" />
+                              <Label fx:id="lblTotalVenta" styleClass="texto-total" text="\$0.00" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+
+                  <Separator styleClass="separador" />
+                  <Label styleClass="seccion-titulo" text="PAGO" />
+                  <HBox spacing="10.0">
+                     <children>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Método de pago" />
+                              <ComboBox fx:id="cmbMetodoPagoVenta" maxWidth="1.7976931348623157E308" promptText="Seleccionar">
+                                 <items>
+                                    <FXCollections fx:factory="observableArrayList">
+                                       <String fx:value="Transferencia" />
+                                       <String fx:value="Efectivo" />
+                                       <String fx:value="Cheque" />
+                                       <String fx:value="Tarjeta" />
+                                    </FXCollections>
+                                 </items>
+                              </ComboBox>
+                           </children>
+                        </VBox>
+                        <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label fx:id="lblPagoInicial" styleClass="etiqueta-campo" text="Pago inicial (opcional)" />
+                              <TextField fx:id="txtPagoInicial" promptText="\$ 0.00" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <TextField fx:id="txtObservacionesVenta" promptText="Observaciones de la venta (opcional)" />
+
+                  <HBox spacing="8.0">
+                     <children>
+                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiarVenta" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
+                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#registrarVenta" styleClass="boton-exito, boton-compacto" text="Registrar venta" HBox.hgrow="ALWAYS" />
+                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarVenta" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </content>
+      </ScrollPane>
+   </children>
+</HBox>

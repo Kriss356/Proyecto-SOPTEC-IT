@@ -2,11 +2,13 @@ package com.mycompany.soptec.it.servicio;
 
 import com.mycompany.soptec.it.dao.CitaDao;
 import com.mycompany.soptec.it.dao.ClienteDao;
+import com.mycompany.soptec.it.dao.ServicioDao;
 import com.mycompany.soptec.it.excepciones.IntegridadReferencialException;
 import com.mycompany.soptec.it.excepciones.SoptecException;
 import com.mycompany.soptec.it.excepciones.ValidacionException;
 import com.mycompany.soptec.it.modelo.Cita;
 import com.mycompany.soptec.it.modelo.Cliente;
+import com.mycompany.soptec.it.modelo.DetalleServicio;
 import com.mycompany.soptec.it.util.AppLogger;
 import com.mycompany.soptec.it.util.Validador;
 import java.util.List;
@@ -19,6 +21,54 @@ public class CitaService {
     private static final String MODULO = "Citas";
     private final CitaDao dao = new CitaDao();
     private final ClienteDao clienteDao = new ClienteDao();
+    private final ServicioDao servicioDao = new ServicioDao();
+
+    // ===================== Cita + servicios (M:N cita_servicio) =====================
+
+    /** Registra la cita con todos sus servicios en una transacción (si algo falla no se guarda nada). */
+    public Cita crearConServicios(Cita c, List<DetalleServicio> servicios) throws SoptecException {
+        return crearConServicios(c, servicios, false);
+    }
+
+    public Cita crearConServicios(Cita c, List<DetalleServicio> servicios, boolean simularFallo) throws SoptecException {
+        String op = "CREAR_CITA_CON_SERVICIOS";
+        try {
+            validar(c, op);
+            VentaService.validarDetalles(servicios, op, MODULO, false, servicioDao);
+            c.setActivo(true);
+            return dao.crearConServicios(c, servicios == null ? List.of() : servicios, simularFallo);
+        } catch (ValidacionException | IntegridadReferencialException ex) {
+            AppLogger.registrarExcepcion(MODULO, "CitaService", op, ex);
+            throw ex;
+        }
+    }
+
+    /** Actualiza la cita y reemplaza sus servicios en una transacción. */
+    public void actualizarConServicios(Cita c, List<DetalleServicio> servicios) throws SoptecException {
+        actualizarConServicios(c, servicios, false);
+    }
+
+    public void actualizarConServicios(Cita c, List<DetalleServicio> servicios, boolean simularFallo)
+            throws SoptecException {
+        String op = "ACTUALIZAR_CITA_CON_SERVICIOS";
+        try {
+            if (c == null || c.getIdCita() <= 0) {
+                throw new ValidacionException(MODULO, op, "Selecciona primero la cita que deseas actualizar.");
+            }
+            validar(c, op);
+            VentaService.validarDetalles(servicios, op, MODULO, false, servicioDao);
+            if (!dao.actualizarConServicios(c, servicios == null ? List.of() : servicios, simularFallo)) {
+                throw new ValidacionException(MODULO, op, "La cita ya no existe.");
+            }
+        } catch (ValidacionException | IntegridadReferencialException ex) {
+            AppLogger.registrarExcepcion(MODULO, "CitaService", op, ex);
+            throw ex;
+        }
+    }
+
+    public List<DetalleServicio> listarServicios(int idCita) throws SoptecException {
+        return dao.listarServicios(idCita);
+    }
 
     public Cita crear(Cita c) throws SoptecException {
         try {
@@ -98,6 +148,10 @@ public class CitaService {
             if (dao.tieneLevantamientos(idCita)) {
                 throw new IntegridadReferencialException(MODULO, "ELIMINAR_FISICO_CITA",
                         "No se puede eliminar la cita porque está vinculada a un levantamiento técnico.");
+            }
+            if (dao.tieneVentas(idCita)) {
+                throw new IntegridadReferencialException(MODULO, "ELIMINAR_FISICO_CITA",
+                        "No se puede eliminar la cita porque ya se facturó en una venta. Puedes desactivarla.");
             }
             if (!dao.eliminarFisico(idCita)) {
                 throw new ValidacionException(MODULO, "ELIMINAR_FISICO_CITA", "No se encontró la cita.");

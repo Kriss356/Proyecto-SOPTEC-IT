@@ -5,6 +5,7 @@ import com.mycompany.soptec.it.util.AppLogger;
 import java.io.IOException;
 import java.io.InputStream;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -26,8 +27,19 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
+        // Recuperación ante errores no previstos: se registran en el log y el usuario recibe un mensaje claro;
+        // la ventana sigue abierta para que pueda continuar trabajando (no hay cierre inesperado).
         Thread.setDefaultUncaughtExceptionHandler((t, ex) -> {
             AppLogger.registrarExcepcion("Sistema", "App", "EXCEPCION_NO_CAPTURADA_UI", ex);
+            Runnable aviso = () -> {
+                try {
+                    AlertaUtil.error("Ocurrió un problema inesperado", AlertaUtil.MENSAJE_ERROR_INESPERADO);
+                } catch (RuntimeException ignorada) {
+                    // Si ni siquiera se puede mostrar el aviso, el error ya quedó en el log.
+                }
+            };
+            // Siempre con runLater: así el aviso no se abre en medio de un dibujado de pantalla.
+            Platform.runLater(aviso);
         });
 
         try {

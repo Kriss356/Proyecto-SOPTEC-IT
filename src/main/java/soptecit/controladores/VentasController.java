@@ -14,14 +14,11 @@ import com.mycompany.soptec.it.util.Validador;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -30,16 +27,15 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
-import soptecit.util.Mensajes;
 import soptecit.util.Tablas;
 
 /**
  * Controlador estilizado del área de Ventas.
- * Integra CRUD real de Clientes, Teléfonos de Cliente, Proyectos y Facturación.
+ * Integra CRUD real de Clientes, Teléfonos de Cliente y Proyectos.
+ * Ventas/Facturación y el Catálogo de servicios tienen su propio controlador (pestañas incluidas con fx:include).
  */
 public class VentasController implements Initializable {
 
@@ -47,7 +43,6 @@ public class VentasController implements Initializable {
     private static final String MOD_TELEFONOS = "TelefonosCliente";
     private static final String MOD_PROYECTOS = "Proyectos";
     private static final NumberFormat MONEDA = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
-    private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ClienteService clienteService = new ClienteService();
     private final ClienteTelefonoService telefonoService = new ClienteTelefonoService();
@@ -118,33 +113,11 @@ public class VentasController implements Initializable {
 
     private Proyecto proyectoSeleccionado;
 
-    // ==================== 4. FACTURACIÓN ====================
-    @FXML private TableView<String[]> tblFacturas;
-    @FXML private TextField txtBuscarFactura;
-    @FXML private ComboBox<String> cmbFiltroFactura;
-    @FXML private Label lblResumenFacturas;
-    @FXML private ComboBox<Proyecto> cmbProyectoFactura;
-    @FXML private TextField txtClienteFactura;
-    @FXML private TextField txtRfcFactura;
-    @FXML private DatePicker dpEmision;
-    @FXML private DatePicker dpVencimiento;
-    @FXML private TextField txtConcepto;
-    @FXML private TextField txtImporte;
-    @FXML private ComboBox<String> cmbMetodoPago;
-    @FXML private Label lblSubtotal;
-    @FXML private Label lblIva;
-    @FXML private Label lblTotal;
-
-    private ObservableList<String[]> facturas;
-    private FilteredList<String[]> facturasFiltradas;
-    private int siguienteFolio = 106;
-
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         inicializarClientes();
         inicializarTelefonos();
         inicializarProyectos();
-        inicializarFacturacion();
         refrescarTodo();
     }
 
@@ -153,7 +126,6 @@ public class VentasController implements Initializable {
         cargarCombosClientes();
         cargarTablaTelefonos(null);
         cargarTablaProyectos(null);
-        cargarComboProyectosFactura();
     }
 
     // =========================================================================
@@ -656,8 +628,7 @@ public class VentasController implements Initializable {
                     "Se guardó '" + creado.getNombreProyecto() + "' para " + creado.getClienteDescriptivo() + ".");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            cargarComboProyectosFactura();
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "CREAR_PROYECTO", ex);
         }
     }
@@ -674,8 +645,7 @@ public class VentasController implements Initializable {
             AlertaUtil.info("Proyecto actualizado", "Se actualizó '" + editado.getNombreProyecto() + "'.");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            cargarComboProyectosFactura();
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "ACTUALIZAR_PROYECTO", ex);
         }
     }
@@ -691,8 +661,7 @@ public class VentasController implements Initializable {
             AlertaUtil.info("Proyecto desactivado", "El proyecto quedó inactivo.");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            cargarComboProyectosFactura();
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "DESACTIVAR_PROYECTO", ex);
         }
     }
@@ -708,8 +677,7 @@ public class VentasController implements Initializable {
             AlertaUtil.info("Proyecto reactivado", "El proyecto volvió a estar activo.");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            cargarComboProyectosFactura();
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "REACTIVAR_PROYECTO", ex);
         }
     }
@@ -729,8 +697,7 @@ public class VentasController implements Initializable {
             AlertaUtil.info("Proyecto eliminado", "El registro fue eliminado de la base de datos.");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            cargarComboProyectosFactura();
-        } catch (Exception ex) {
+            } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "ELIMINAR_FISICO_PROYECTO", ex);
         }
     }
@@ -773,163 +740,5 @@ public class VentasController implements Initializable {
         base.setEstado(cmbEstadoProy.getValue());
         base.setCostoTotal(Validador.parsearDecimalNoNegativo(txtCostoProy.getText(), "Costo total", MOD_PROYECTOS, op));
         return base;
-    }
-
-    // =========================================================================
-    // 4. FACTURACIÓN
-    // =========================================================================
-    private void inicializarFacturacion() {
-        dpEmision.setValue(LocalDate.now());
-        dpVencimiento.setValue(LocalDate.now().plusDays(30));
-
-        cmbProyectoFactura.valueProperty().addListener((o, a, p) -> {
-            if (p != null) {
-                txtClienteFactura.setText(p.getClienteNombre() != null ? p.getClienteNombre() : "");
-                txtRfcFactura.setText(p.getClienteRfc() != null ? p.getClienteRfc() : "");
-                txtConcepto.setText(p.getNombreProyecto());
-                if (p.getCostoTotal() != null) {
-                    txtImporte.setText(p.getCostoTotal().toPlainString());
-                }
-            } else {
-                txtClienteFactura.clear();
-                txtRfcFactura.clear();
-            }
-        });
-        txtImporte.textProperty().addListener((o, a, n) -> calcularTotales());
-
-        Tablas.cargar(tblFacturas, new String[][]{
-            {"F-0105", "PRY-0001", "Corporativo Avante", "15/10/2026", "$100,224.00", "Parcial",
-                "CAV150301AB2", "14/11/2026", "Instalación de red Cat6 - 24 nodos", "$86,400.00", "$13,824.00", "Transferencia"},
-            {"F-0104", "PRY-0002", "Oficinas LTJO", "08/10/2026", "$58,000.00", "Pagada",
-                "OLT120815KJ3", "07/11/2026", "Red de voz y datos - 16 nodos", "$50,000.00", "$8,000.00", "Transferencia"}
-        });
-
-        facturas = tblFacturas.getItems();
-        facturasFiltradas = new FilteredList<>(facturas, f -> true);
-        tblFacturas.setItems(facturasFiltradas);
-
-        txtBuscarFactura.textProperty().addListener((o, a, n) -> filtrarFacturas());
-        cmbFiltroFactura.valueProperty().addListener((o, a, n) -> filtrarFacturas());
-        facturasFiltradas.addListener((javafx.collections.ListChangeListener<String[]>) c -> actualizarResumenFacturas());
-
-        tblFacturas.setRowFactory(t -> {
-            TableRow<String[]> fila = new TableRow<>();
-            fila.setOnMouseClicked(e -> {
-                if (e.getClickCount() == 2 && !fila.isEmpty()) {
-                    DetalleFacturaController.abrir(fila.getItem(), tblFacturas.getScene().getWindow());
-                }
-            });
-            return fila;
-        });
-        actualizarResumenFacturas();
-    }
-
-    private void cargarComboProyectosFactura() {
-        try {
-            List<Proyecto> activos = proyectoService.listar(false);
-            cmbProyectoFactura.setItems(FXCollections.observableArrayList(activos));
-        } catch (Exception ex) {
-            // Ya reportado en proyectos
-        }
-    }
-
-    private void filtrarFacturas() {
-        String texto = txtBuscarFactura.getText() == null ? "" : txtBuscarFactura.getText().trim().toLowerCase();
-        String estado = cmbFiltroFactura.getValue();
-        facturasFiltradas.setPredicate(f -> {
-            boolean coincideTexto = texto.isEmpty() || f[0].toLowerCase().contains(texto)
-                    || f[1].toLowerCase().contains(texto) || f[2].toLowerCase().contains(texto);
-            boolean coincideEstado = estado == null || estado.equals("Todas") || f[5].equals(estado);
-            return coincideTexto && coincideEstado;
-        });
-    }
-
-    private void actualizarResumenFacturas() {
-        double total = 0;
-        for (String[] f : facturasFiltradas) {
-            total += numero(f[4]);
-        }
-        int n = facturasFiltradas.size();
-        lblResumenFacturas.setText(n + (n == 1 ? " factura" : " facturas") + "  ·  Total facturado " + MONEDA.format(total));
-    }
-
-    private static double numero(String texto) {
-        if (texto == null) {
-            return 0;
-        }
-        try {
-            return Double.parseDouble(texto.replace("$", "").replace(",", "").trim());
-        } catch (NumberFormatException ex) {
-            return 0;
-        }
-    }
-
-    private void calcularTotales() {
-        double subtotal = numero(txtImporte.getText());
-        double iva = subtotal * 0.16;
-        lblSubtotal.setText(MONEDA.format(subtotal));
-        lblIva.setText(MONEDA.format(iva));
-        lblTotal.setText(MONEDA.format(subtotal + iva));
-    }
-
-    @FXML
-    private void verFactura(ActionEvent event) {
-        String[] factura = tblFacturas.getSelectionModel().getSelectedItem();
-        if (factura == null) {
-            Mensajes.info("Selecciona una factura", "Elige una factura del historial para verla.");
-            return;
-        }
-        DetalleFacturaController.abrir(factura, tblFacturas.getScene().getWindow());
-    }
-
-    @FXML
-    private void emitirFactura(ActionEvent event) {
-        Proyecto proy = cmbProyectoFactura.getValue();
-        if (proy == null || txtImporte.getText().trim().isEmpty()) {
-            Mensajes.error("Faltan datos", "Selecciona el proyecto e indica el importe.");
-            return;
-        }
-        double subtotal = numero(txtImporte.getText());
-        if (subtotal <= 0) {
-            Mensajes.error("Importe no válido", "Escribe el importe con números, por ejemplo 86400.");
-            return;
-        }
-        double iva = subtotal * 0.16;
-        String[] factura = {
-            String.format("F-%04d", siguienteFolio++),
-            "PRY-" + String.format("%04d", proy.getIdProyecto()),
-            txtClienteFactura.getText(),
-            dpEmision.getValue() == null ? "" : dpEmision.getValue().format(FECHA),
-            MONEDA.format(subtotal + iva),
-            "Pendiente",
-            txtRfcFactura.getText(),
-            dpVencimiento.getValue() == null ? "" : dpVencimiento.getValue().format(FECHA),
-            txtConcepto.getText().trim().isEmpty() ? proy.getNombreProyecto() : txtConcepto.getText().trim(),
-            MONEDA.format(subtotal),
-            MONEDA.format(iva),
-            cmbMetodoPago.getValue() == null ? "Por definir" : cmbMetodoPago.getValue()
-        };
-
-        txtBuscarFactura.clear();
-        cmbFiltroFactura.setValue(null);
-        facturas.add(0, factura);
-        tblFacturas.getSelectionModel().select(factura);
-        tblFacturas.scrollTo(0);
-        limpiarFactura(null);
-
-        if (Mensajes.confirmar("Factura " + factura[0] + " emitida",
-                "Total: " + factura[4] + ". Se guardó en el historial.\n¿Deseas verla ahora?")) {
-            DetalleFacturaController.abrir(factura, tblFacturas.getScene().getWindow());
-        }
-    }
-
-    @FXML
-    private void limpiarFactura(ActionEvent event) {
-        cmbProyectoFactura.setValue(null);
-        txtClienteFactura.clear();
-        txtRfcFactura.clear();
-        txtConcepto.clear();
-        txtImporte.clear();
-        cmbMetodoPago.setValue(null);
     }
 }

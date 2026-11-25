@@ -9,6 +9,7 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.image.Image?>
@@ -152,6 +153,30 @@
                      <VBox.margin>
                         <Insets top="14.0" />
                      </VBox.margin>
+                  </Button>
+
+                  <!-- Acceso para clientes (Portal del cliente) -->
+                  <HBox alignment="CENTER" spacing="10.0">
+                     <VBox.margin>
+                        <Insets top="18.0" />
+                     </VBox.margin>
+                     <children>
+                        <Separator HBox.hgrow="ALWAYS" />
+                        <Label styleClass="texto-tenue" text="¿Eres cliente?" />
+                        <Separator HBox.hgrow="ALWAYS" />
+                     </children>
+                  </HBox>
+                  <Button fx:id="btnSoyCliente" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#abrirPortalCliente" text="Entrar como cliente">
+                     <graphic>
+                        <SVGPath content="M12 12 A4 4 0 1 0 12 4 A4 4 0 1 0 12 12 Z M4.5 20.5 C5.5 16.5 8.5 14.5 12 14.5 C15.5 14.5 18.5 16.5 19.5 20.5" styleClass="icono-boton" />
+                     </graphic>
+                     <styleClass>
+                        <String fx:value="boton-naranja" />
+                        <String fx:value="boton-grande" />
+                     </styleClass>
+                     <tooltip>
+                        <Tooltip text="Agenda citas, pide instalaciones, compra material o revisa tus servicios. Solo necesitas tu número de teléfono." />
+                     </tooltip>
                   </Button>
                </children>
             </VBox>

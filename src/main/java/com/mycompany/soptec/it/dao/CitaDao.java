@@ -3,6 +3,8 @@ package com.mycompany.soptec.it.dao;
 import com.mycompany.soptec.it.excepciones.OperacionBDException;
 import com.mycompany.soptec.it.excepciones.SoptecException;
 import com.mycompany.soptec.it.modelo.Cita;
+import com.mycompany.soptec.it.modelo.DetalleServicio;
+import com.mycompany.soptec.it.util.AppLogger;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -168,6 +170,155 @@ public class CitaDao {
         } catch (SQLException ex) {
             throw DaoSupport.traducirYRegistrar(MODULO, "CitaDao", "VERIFICAR_RELACIONES",
                     "Error al verificar levantamientos vinculados a la cita.", ex);
+        }
+    }
+
+    // =====================================================================
+    // Cita + servicios (relación muchos a muchos cita_servicio) en UNA transacción
+    // =====================================================================
+
+    /**
+     * Registra la cita y todos sus servicios. Si cualquier INSERT falla se hace ROLLBACK:
+     * no queda la cita sin servicios ni servicios sin cita.
+     *
+     * @param simularFallo provoca un error después de guardar la cita (para pruebas de rollback)
+     */
+    public Cita crearConServicios(Cita c, List<DetalleServicio> servicios, boolean simularFallo)
+            throws SoptecException {
+        MigracionBD.asegurarEsquema();
+        String op = "CREAR_CITA_CON_SERVICIOS";
+        String sql = "INSERT INTO cita (fecha_cita, hora_cita, estado_cita, observaciones, id_cliente, activo) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
+        Connection con = null;
+        try {
+            con = Conexion.conectarStrict(MODULO, op);
+            con.setAutoCommit(false);
+            int idCita;
+            try (PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                ps.setDate(1, Date.valueOf(c.getFechaCita()));
+                ps.setTime(2, Time.valueOf(c.getHoraCita()));
+                ps.setString(3, c.getEstadoCita());
+                DaoSupport.setNullableString(ps, 4, c.getObservaciones());
+                ps.setInt(5, c.getIdCliente());
+                ps.setBoolean(6, c.isActivo());
+                ps.executeUpdate();
+                try (ResultSet keys = ps.getGeneratedKeys()) {
+                    if (!keys.next()) {
+                        throw new SQLException("No se obtuvo el ID de la cita", "45000", 9998);
+                    }
+                    idCita = keys.getInt(1);
+                }
+            }
+            if (simularFallo) {
+                throw new SQLException("Fallo simulado despues del INSERT de cita para comprobar rollback.", "45000", 9999);
+            }
+            insertarServicios(con, idCita, servicios);
+            con.commit();
+            AppLogger.registrarInfo(MODULO, "CitaDao", op,
+                    "Transaccion confirmada: cita ID=" + idCita + " con " + servicios.size() + " servicio(s)");
+            c.setIdCita(idCita);
+            return c;
+        } catch (SQLException ex) {
+            Conexion.revertirSilencioso(con, MODULO, op);
+            throw DaoSupport.traducirYRegistrar(MODULO, "CitaDao", op,
+                    "No se pudo agendar la cita con sus servicios. Se revirtieron los cambios: no se guardó nada.", ex);
+        } finally {
+            Conexion.cerrarSilencioso(con);
+        }
+    }
+
+    /** Actualiza la cita y reemplaza su lista de servicios en una sola transacción. */
+    public boolean actualizarConServicios(Cita c, List<DetalleServicio> servicios, boolean simularFallo)
+            throws SoptecException {
+        MigracionBD.asegurarEsquema();
+        String op = "ACTUALIZAR_CITA_CON_SERVICIOS";
+        String sql = "UPDATE cita SET fecha_cita = ?, hora_cita = ?, estado_cita = ?, observaciones = ?, "
+                + "id_cliente = ?, activo = ? WHERE id_cita = ?";
+        Connection con = null;
+        try {
+            con = Conexion.conectarStrict(MODULO, op);
+            con.setAutoCommit(false);
+            int filas;
+            try (PreparedStatement ps = con.prepareStatement(sql)) {
+                ps.setDate(1, Date.valueOf(c.getFechaCita()));
+                ps.setTime(2, Time.valueOf(c.getHoraCita()));
+                ps.setString(3, c.getEstadoCita());
+                DaoSupport.setNullableString(ps, 4, c.getObservaciones());
+                ps.setInt(5, c.getIdCliente());
+                ps.setBoolean(6, c.isActivo());
+                ps.setInt(7, c.getIdCita());
+                filas = ps.executeUpdate();
+            }
+            if (filas == 0) {
+                con.rollback();
+                return false;
+            }
+            try (PreparedStatement del = con.prepareStatement("DELETE FROM cita_servicio WHERE id_cita = ?")) {
+                del.setInt(1, c.getIdCita());
+                del.executeUpdate();
+            }
+            if (simularFallo) {
+                throw new SQLException("Fallo simulado al reemplazar los servicios de la cita.", "45000", 9999);
+            }
+            insertarServicios(con, c.getIdCita(), servicios);
+            con.commit();
+            AppLogger.registrarInfo(MODULO, "CitaDao", op,
+                    "Transaccion confirmada: cita ID=" + c.getIdCita() + " con " + servicios.size() + " servicio(s)");
+            return true;
+        } catch (SQLException ex) {
+            Conexion.revertirSilencioso(con, MODULO, op);
+            throw DaoSupport.traducirYRegistrar(MODULO, "CitaDao", op,
+                    "No se pudo actualizar la cita y sus servicios. Se revirtieron los cambios.", ex);
+        } finally {
+            Conexion.cerrarSilencioso(con);
+        }
+    }
+
+    public List<DetalleServicio> listarServicios(int idCita) throws SoptecException {
+        MigracionBD.asegurarEsquema();
+        String sql = "SELECT cs.id_servicio, s.nombre_servicio, cs.cantidad, cs.precio_unitario "
+                + "FROM cita_servicio cs INNER JOIN servicio s ON s.id_servicio = cs.id_servicio "
+                + "WHERE cs.id_cita = ? ORDER BY s.nombre_servicio";
+        List<DetalleServicio> lista = new ArrayList<>();
+        try (Connection con = Conexion.conectarStrict(MODULO, "LISTAR_SERVICIOS_CITA");
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idCita);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    lista.add(new DetalleServicio(rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getBigDecimal(4)));
+                }
+            }
+            return lista;
+        } catch (SQLException ex) {
+            throw DaoSupport.traducirYRegistrar(MODULO, "CitaDao", "LISTAR_SERVICIOS_CITA",
+                    "Error al consultar los servicios de la cita.", ex);
+        }
+    }
+
+    public boolean tieneVentas(int idCita) throws SoptecException {
+        MigracionBD.asegurarEsquema();
+        try (Connection con = Conexion.conectarStrict(MODULO, "VERIFICAR_RELACIONES");
+             PreparedStatement ps = con.prepareStatement("SELECT COUNT(*) FROM venta WHERE id_cita = ?")) {
+            ps.setInt(1, idCita);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() && rs.getInt(1) > 0;
+            }
+        } catch (SQLException ex) {
+            throw DaoSupport.traducirYRegistrar(MODULO, "CitaDao", "VERIFICAR_RELACIONES",
+                    "Error al verificar ventas vinculadas a la cita.", ex);
+        }
+    }
+
+    private void insertarServicios(Connection con, int idCita, List<DetalleServicio> servicios) throws SQLException {
+        String sql = "INSERT INTO cita_servicio (id_cita, id_servicio, cantidad, precio_unitario) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            for (DetalleServicio d : servicios) {
+                ps.setInt(1, idCita);
+                ps.setInt(2, d.getIdServicio());
+                ps.setInt(3, d.getCantidad());
+                ps.setBigDecimal(4, d.getPrecioUnitario());
+                ps.executeUpdate();
+            }
         }
     }
 

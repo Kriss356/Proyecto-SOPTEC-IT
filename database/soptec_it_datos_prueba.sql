@@ -3,12 +3,70 @@
 -- Se puede importar las veces que quieras: primero vacia las tablas y reinicia los IDs.
 USE soptec_it;
 -- Vaciar tablas (de hijas a padres, funciona con la revision de llaves foraneas activada)
+-- (Portal del cliente) las tablas de pedidos se crean si aun no existen, para poder vaciarlas
+CREATE TABLE IF NOT EXISTS pedido_cliente (
+  id_pedido INT(11) AUTO_INCREMENT PRIMARY KEY, id_cliente INT(11) NOT NULL,
+  fecha_pedido DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, estado VARCHAR(30) NOT NULL DEFAULT 'Apartado',
+  total DECIMAL(12,2) NOT NULL DEFAULT 0.00, observaciones TEXT NULL, activo TINYINT(1) NOT NULL DEFAULT 1,
+  CONSTRAINT fk_pedcli_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS pedido_cliente_material (
+  id_pedido INT(11) NOT NULL, id_material INT(11) NOT NULL, cantidad INT NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(10,2) NOT NULL DEFAULT 0.00, PRIMARY KEY (id_pedido, id_material),
+  CONSTRAINT fk_pcm_pedido FOREIGN KEY (id_pedido) REFERENCES pedido_cliente(id_pedido) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_pcm_material FOREIGN KEY (id_material) REFERENCES material(id_material) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+-- (Practica CRUD 20/11/2026) Tablas de servicios y ventas: se crean si aun no existen
+CREATE TABLE IF NOT EXISTS servicio (
+  id_servicio INT(11) AUTO_INCREMENT PRIMARY KEY, nombre_servicio VARCHAR(100) NOT NULL UNIQUE,
+  descripcion VARCHAR(255) NULL, precio DECIMAL(12,2) NOT NULL DEFAULT 0.00, imagen VARCHAR(500) NULL,
+  activo TINYINT(1) NOT NULL DEFAULT 1
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS cita_servicio (
+  id_cita INT(11) NOT NULL, id_servicio INT(11) NOT NULL, cantidad INT NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(12,2) NOT NULL DEFAULT 0.00, PRIMARY KEY (id_cita, id_servicio),
+  CONSTRAINT fk_cs_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_cs_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS venta (
+  id_venta INT(11) AUTO_INCREMENT PRIMARY KEY, folio VARCHAR(20) NULL UNIQUE, id_cliente INT(11) NOT NULL,
+  id_proyecto INT(11) NULL, id_cita INT(11) NULL, fecha_venta DATE NOT NULL, fecha_vencimiento DATE NULL,
+  subtotal DECIMAL(12,2) NOT NULL DEFAULT 0.00, iva DECIMAL(12,2) NOT NULL DEFAULT 0.00,
+  total DECIMAL(12,2) NOT NULL DEFAULT 0.00, metodo_pago VARCHAR(30) NULL,
+  estado VARCHAR(30) NOT NULL DEFAULT 'Pendiente', observaciones TEXT NULL, activo TINYINT(1) NOT NULL DEFAULT 1,
+  CONSTRAINT fk_venta_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_venta_proyecto FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto) ON DELETE RESTRICT ON UPDATE CASCADE,
+  CONSTRAINT fk_venta_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+CREATE TABLE IF NOT EXISTS venta_servicio (
+  id_venta INT(11) NOT NULL, id_servicio INT(11) NOT NULL, cantidad INT NOT NULL DEFAULT 1,
+  precio_unitario DECIMAL(12,2) NOT NULL DEFAULT 0.00, PRIMARY KEY (id_venta, id_servicio),
+  CONSTRAINT fk_vs_venta FOREIGN KEY (id_venta) REFERENCES venta(id_venta) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_vs_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio) ON DELETE RESTRICT ON UPDATE CASCADE
+) ENGINE=InnoDB;
+-- pago: ahora tambien se relaciona con la venta (abonos de una factura)
+ALTER TABLE pago MODIFY id_proyecto INT(11) NULL;
+ALTER TABLE pago ADD COLUMN IF NOT EXISTS id_venta INT(11) NULL AFTER id_proyecto;
+ALTER TABLE pago ADD COLUMN IF NOT EXISTS metodo_pago VARCHAR(30) NULL AFTER fecha_pago;
+ALTER TABLE pago ADD CONSTRAINT fk_pago_venta FOREIGN KEY IF NOT EXISTS (id_venta) REFERENCES venta(id_venta) ON DELETE RESTRICT ON UPDATE CASCADE;
+-- orden_compra: ahora guarda el proveedor y el estado; el proyecto es opcional (compra para stock)
+ALTER TABLE orden_compra MODIFY id_proyecto INT(11) NULL;
+ALTER TABLE orden_compra ADD COLUMN IF NOT EXISTS id_proveedor INT(11) NULL AFTER id_proyecto;
+ALTER TABLE orden_compra ADD COLUMN IF NOT EXISTS estado VARCHAR(30) NOT NULL DEFAULT 'Solicitada';
+ALTER TABLE orden_compra ADD CONSTRAINT fk_oc_proveedor FOREIGN KEY IF NOT EXISTS (id_proveedor) REFERENCES proveedor(id_proveedor) ON DELETE RESTRICT ON UPDATE CASCADE;
+DELETE FROM venta_servicio;
+DELETE FROM cita_servicio;
+
+DELETE FROM pedido_cliente;
+ALTER TABLE pedido_cliente AUTO_INCREMENT = 1;
 DELETE FROM orden_compra_material;
 DELETE FROM orden_compra;
 DELETE FROM proyecto_material;
 DELETE FROM proyecto_empleado;
 DELETE FROM material_proveedor;
 DELETE FROM pago;
+DELETE FROM venta;
+DELETE FROM servicio;
 DELETE FROM levantamiento;
 DELETE FROM cita;
 DELETE FROM proyecto;
@@ -19,6 +77,8 @@ DELETE FROM proveedor;
 DELETE FROM material;
 ALTER TABLE orden_compra AUTO_INCREMENT = 1;
 ALTER TABLE pago AUTO_INCREMENT = 1;
+ALTER TABLE venta AUTO_INCREMENT = 1;
+ALTER TABLE servicio AUTO_INCREMENT = 1;
 ALTER TABLE levantamiento AUTO_INCREMENT = 1;
 ALTER TABLE cita AUTO_INCREMENT = 1;
 ALTER TABLE proyecto AUTO_INCREMENT = 1;
@@ -77,3 +137,36 @@ INSERT INTO levantamiento (id_levantamiento, fecha_visita, croquis, observacione
 (2, '2026-11-08', NULL, 'Bodega de 800 m2, canaleta por techo, 16 nodos',    1, 2, 2);
 
 INSERT INTO proyecto_empleado (id_proyecto, id_empleado) VALUES (1,1),(1,2),(2,3);
+
+-- ---------------- (20/11/2026) Catalogo de servicios, citas con servicios, ventas y pagos ----------------
+INSERT INTO servicio (id_servicio, nombre_servicio, descripcion, precio, activo) VALUES
+(1, 'Levantamiento técnico',            'Visita para medir y revisar el lugar de la instalación', 850.00, 1),
+(2, 'Instalación de nodo de red Cat6',  'Tendido de cable, conectorizado y certificación por nodo', 1450.00, 1),
+(3, 'Fusión de fibra óptica',           'Fusión y prueba de cada hilo de fibra',                    650.00, 1),
+(4, 'Configuración de switch o router', 'Configuración de VLAN, seguridad y respaldo',              1200.00, 1),
+(5, 'Mantenimiento preventivo de red',  'Revisión, limpieza y pruebas de la red existente',         1800.00, 1),
+(6, 'Instalación de cámara de seguridad','Montaje, cableado y configuración por cámara',            1650.00, 1);
+
+INSERT INTO cita_servicio (id_cita, id_servicio, cantidad, precio_unitario) VALUES
+(1, 1, 1, 850.00),
+(2, 1, 1, 850.00),
+(3, 1, 1, 850.00), (3, 3, 12, 650.00),
+(4, 6, 4, 1650.00), (4, 4, 1, 1200.00);
+
+INSERT INTO venta (id_venta, folio, id_cliente, id_proyecto, id_cita, fecha_venta, fecha_vencimiento, subtotal, iva, total, metodo_pago, estado, observaciones, activo) VALUES
+(1, 'F-0001', 1, 1, 1, '2026-11-04', '2026-12-04', 35400.00, 5664.00, 41064.00, 'Transferencia', 'Parcial', 'Red de oficina: 24 nodos y configuración', 1),
+(2, 'F-0002', 4, 2, 2, '2026-11-11', '2026-12-11', 24050.00, 3848.00, 27898.00, 'Transferencia', 'Pagada',  'Cableado de bodega', 1);
+
+INSERT INTO venta_servicio (id_venta, id_servicio, cantidad, precio_unitario) VALUES
+(1, 1, 1, 850.00), (1, 2, 23, 1450.00), (1, 4, 1, 1200.00),
+(2, 1, 1, 850.00), (2, 2, 16, 1450.00);
+
+INSERT INTO pago (id_pago, id_proyecto, id_venta, concepto, monto, fecha_pago, metodo_pago, estado_cuenta) VALUES
+(1, 1, 1, 'Anticipo 50 %',   20532.00, '2026-11-04', 'Transferencia', 'Abono'),
+(2, 2, 2, 'Pago total',      27898.00, '2026-11-11', 'Transferencia', 'Liquidado');
+
+INSERT INTO orden_compra (id_orden_compra, id_proyecto, id_proveedor, fecha_orden, total_compra, tiempo_entrega, estado) VALUES
+(1, 1, 1, '2026-11-05', 8490.00, '2026-11-09', 'Recibida');
+INSERT INTO orden_compra_material (id_orden_compra, id_material, cantidad) VALUES (1, 1, 3), (1, 2, 3);
+
+INSERT INTO proyecto_material (id_proyecto, id_material, cantidad) VALUES (1, 1, 2), (1, 2, 1), (2, 1, 1);

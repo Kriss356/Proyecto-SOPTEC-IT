@@ -156,6 +156,13 @@
                </content>
             </Tab>
 
+            <!-- ==================== 1b. PERSONAL POR PROYECTO (M:N proyecto_empleado) ==================== -->
+            <Tab text="Personal por proyecto">
+               <content>
+                  <fx:include source="PersonalProyecto.fxml" />
+               </content>
+            </Tab>
+
             <!-- ==================== 2. REVISIÓN DE PROPUESTAS ==================== -->
             <Tab text="Revisión de propuestas">
                <content>
@@ -230,113 +237,10 @@
                </content>
             </Tab>
 
-            <!-- ==================== 3. CUENTAS POR COBRAR ==================== -->
+            <!-- ==================== 3. CUENTAS POR COBRAR (ventas, saldos y abonos en MySQL) ==================== -->
             <Tab text="Cuentas por cobrar">
                <content>
-                  <VBox spacing="20.0">
-                     <children>
-                        <HBox spacing="18.0">
-                           <children>
-                              <VBox maxWidth="1.7976931348623157E308" styleClass="kpi" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="kpi-etiqueta" text="Cartera total proyectos" />
-                                    <Label fx:id="lblSaldoTotal" styleClass="kpi-valor" text="\$0.00" />
-                                 </children>
-                              </VBox>
-                              <VBox maxWidth="1.7976931348623157E308" styleClass="kpi" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="kpi-etiqueta" text="Proyectos activos" />
-                                    <Label fx:id="lblFacturasPendientes" styleClass="kpi-valor" text="0" />
-                                 </children>
-                              </VBox>
-                              <VBox maxWidth="1.7976931348623157E308" styleClass="kpi" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="kpi-etiqueta" text="Proyectos finalizados" />
-                                    <Label fx:id="lblPagosRecibidos" styleClass="kpi-valor" text="0" />
-                                 </children>
-                              </VBox>
-                              <VBox maxWidth="1.7976931348623157E308" styleClass="kpi" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="kpi-etiqueta" text="En revisión" />
-                                    <Label fx:id="lblPagosVencidos" styleClass="kpi-valor" text="0" />
-                                 </children>
-                              </VBox>
-                           </children>
-                        </HBox>
-                        <HBox spacing="20.0" VBox.vgrow="ALWAYS">
-                           <children>
-                              <VBox spacing="12.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
-                                 <children>
-                                    <Label styleClass="tarjeta-titulo" text="Estado de cuenta por proyecto" />
-                                    <TableView fx:id="tblCuentas" minHeight="200.0" VBox.vgrow="ALWAYS">
-                                       <columns>
-                                          <TableColumn prefWidth="75.0" text="Folio" />
-                                          <TableColumn prefWidth="140.0" text="Cliente" />
-                                          <TableColumn prefWidth="140.0" text="Proyecto" />
-                                          <TableColumn prefWidth="90.0" text="Total" />
-                                          <TableColumn prefWidth="95.0" styleClass="col-estado" text="Estado" />
-                                       </columns>
-                                       <columnResizePolicy>
-                                          <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                                       </columnResizePolicy>
-                                    </TableView>
-                                 </children>
-                              </VBox>
-                              <VBox minWidth="310.0" prefWidth="330.0" spacing="10.0" styleClass="tarjeta">
-                                 <children>
-                                    <Label styleClass="tarjeta-titulo" text="Registrar pago" />
-                                    <VBox spacing="5.0">
-                                       <children>
-                                          <Label styleClass="etiqueta-campo" text="Proyecto" />
-                                          <ComboBox fx:id="cmbProyectoPago" maxWidth="1.7976931348623157E308" promptText="Seleccione proyecto" />
-                                       </children>
-                                    </VBox>
-                                    <HBox alignment="CENTER_LEFT" styleClass="item-lista">
-                                       <children>
-                                          <Label styleClass="texto-tenue" text="Costo del proyecto" />
-                                          <Region HBox.hgrow="ALWAYS" />
-                                          <Label fx:id="lblSaldoFactura" styleClass="texto-total" text="\$0.00" />
-                                       </children>
-                                    </HBox>
-                                    <HBox spacing="10.0">
-                                       <children>
-                                          <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <Label styleClass="etiqueta-campo" text="Fecha" />
-                                                <DatePicker fx:id="dpFechaPago" maxWidth="1.7976931348623157E308" />
-                                             </children>
-                                          </VBox>
-                                          <VBox spacing="5.0" HBox.hgrow="ALWAYS">
-                                             <children>
-                                                <Label styleClass="etiqueta-campo" text="Monto" />
-                                                <TextField fx:id="txtMontoPago" promptText="\$ 0.00" />
-                                             </children>
-                                          </VBox>
-                                       </children>
-                                    </HBox>
-                                    <VBox spacing="5.0">
-                                       <children>
-                                          <Label styleClass="etiqueta-campo" text="Método de pago" />
-                                          <ComboBox fx:id="cmbMetodoPagoAdm" maxWidth="1.7976931348623157E308" promptText="Seleccionar">
-                                             <items>
-                                                <FXCollections fx:factory="observableArrayList">
-                                                   <String fx:value="Transferencia" />
-                                                   <String fx:value="Efectivo" />
-                                                   <String fx:value="Cheque" />
-                                                   <String fx:value="Tarjeta" />
-                                                </FXCollections>
-                                             </items>
-                                          </ComboBox>
-                                       </children>
-                                    </VBox>
-                                    <Region VBox.vgrow="ALWAYS" />
-                                    <Button fx:id="btnRegistrarPago" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#registrarPago" styleClass="boton-exito" text="Registrar pago" />
-                                 </children>
-                              </VBox>
-                           </children>
-                        </HBox>
-                     </children>
-                  </VBox>
+                  <fx:include source="CuentasCobrar.fxml" />
                </content>
             </Tab>
 

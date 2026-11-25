@@ -62,6 +62,12 @@ public final class AppLogger {
         escribir("INFO", modulo, proceso, operacion, "OPERACION_OK", mensaje);
     }
 
+    /** Evento que no es un error pero conviene revisar (por ejemplo, una transacción revertida). */
+    public static synchronized void registrarAdvertencia(String modulo, String proceso, String operacion,
+            String tipo, String mensaje) {
+        escribir("WARN", modulo, proceso, operacion, tipo, mensaje);
+    }
+
     public static synchronized List<String> leerLineas() {
         try {
             if (!Files.exists(RUTA_LOG)) {

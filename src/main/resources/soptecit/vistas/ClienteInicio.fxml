@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
+<?import javafx.scene.shape.SVGPath?>
+
+<!-- ================= PORTAL DEL CLIENTE | INICIO (4 opciones grandes) ================= -->
+<VBox prefHeight="640.0" prefWidth="1100.0" spacing="22.0" styleClass="modulo" stylesheets="@../css/estilos.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="soptecit.controladores.ClienteInicioController">
+   <children>
+
+      <!-- Bienvenida + próxima cita -->
+      <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="bienvenida">
+         <children>
+            <VBox spacing="6.0" HBox.hgrow="ALWAYS">
+               <children>
+                  <Label fx:id="lblBienvenida" style="-fx-font-size: 26px;" styleClass="bienvenida-titulo" text="¿Qué necesitas hoy?" />
+                  <Label style="-fx-font-size: 16px;" styleClass="bienvenida-texto" text="Toca una de las opciones de abajo. Te guiamos paso a paso." wrapText="true" />
+               </children>
+            </VBox>
+            <VBox fx:id="panelProximaCita" alignment="CENTER_LEFT" managed="false" maxWidth="380.0" spacing="4.0" style="-fx-background-color: rgba(255,255,255,0.12); -fx-background-radius: 12; -fx-padding: 12 18;" visible="false">
+               <children>
+                  <Label style="-fx-font-size: 14px;" styleClass="bienvenida-texto" text="Tu próxima cita" />
+                  <Label fx:id="lblProximaCita" style="-fx-font-size: 18px;" styleClass="bienvenida-titulo" text="Jueves 26 de noviembre · 10:00" wrapText="true" />
+                  <Label fx:id="lblProximaCitaEstado" style="-fx-font-size: 14px; -fx-text-fill: #FFD9B8;" text="Esperando confirmación" />
+               </children>
+            </VBox>
+         </children>
+      </HBox>
+
+      <!-- Opciones principales -->
+      <GridPane hgap="20.0" prefHeight="330.0" vgap="20.0">
+         <columnConstraints>
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+            <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="150.0" percentHeight="50.0" />
+            <RowConstraints minHeight="150.0" percentHeight="50.0" />
+         </rowConstraints>
+         <children>
+            <Button fx:id="btnAgendar" alignment="CENTER_LEFT" contentDisplay="GRAPHIC_ONLY" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" onAction="#abrirCita" styleClass="portal-tile" text="Agendar una cita" GridPane.columnIndex="0" GridPane.rowIndex="0">
+               <graphic>
+                  <HBox alignment="CENTER_LEFT" fillHeight="false" spacing="20.0">
+                     <children>
+                        <StackPane minHeight="76.0" minWidth="76.0" styleClass="icono-azul">
+                           <children>
+                              <Circle radius="38.0" styleClass="portal-icono-fondo" />
+                              <SVGPath content="M4 6 H20 V20.5 H4 Z M4 10 H20 M8.5 3.5 V7.5 M15.5 3.5 V7.5" styleClass="portal-icono" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="6.0">
+                           <children>
+                              <Label styleClass="portal-tile-titulo" text="Agendar una cita" />
+                              <Label maxWidth="330.0" styleClass="portal-tile-texto" text="Revisamos, reparamos o le damos mantenimiento a tu equipo." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Elige el servicio, el día y la hora" />
+               </tooltip>
+            </Button>
+            <Button fx:id="btnInstalacion" alignment="CENTER_LEFT" contentDisplay="GRAPHIC_ONLY" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" onAction="#abrirInstalacion" styleClass="portal-tile" text="Pedir una instalación" GridPane.columnIndex="1" GridPane.rowIndex="0">
+               <graphic>
+                  <HBox alignment="CENTER_LEFT" fillHeight="false" spacing="20.0">
+                     <children>
+                        <StackPane minHeight="76.0" minWidth="76.0" styleClass="icono-naranja">
+                           <children>
+                              <Circle radius="38.0" styleClass="portal-icono-fondo" />
+                              <SVGPath content="M9 3 H15 V8 H9 Z M3 16 H9 V21 H3 Z M15 16 H21 V21 H15 Z M12 8 V12 M6 16 V12 H18 V16" styleClass="portal-icono" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="6.0">
+                           <children>
+                              <Label styleClass="portal-tile-titulo" text="Pedir una instalación" />
+                              <Label maxWidth="330.0" styleClass="portal-tile-texto" text="Cableado, red, internet, fibra óptica o cámaras en tu domicilio." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Vamos a tu domicilio a instalar" />
+               </tooltip>
+            </Button>
+            <Button fx:id="btnTienda" alignment="CENTER_LEFT" contentDisplay="GRAPHIC_ONLY" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" onAction="#abrirTienda" styleClass="portal-tile" text="Comprar material" GridPane.columnIndex="0" GridPane.rowIndex="1">
+               <graphic>
+                  <HBox alignment="CENTER_LEFT" fillHeight="false" spacing="20.0">
+                     <children>
+                        <StackPane minHeight="76.0" minWidth="76.0" styleClass="icono-verde">
+                           <children>
+                              <Circle radius="38.0" styleClass="portal-icono-fondo" />
+                              <SVGPath content="M3 4 H6 L8.5 15 H18.5 L20.5 7.5 H7 M9 20 A1.5 1.5 0 1 0 12 20 A1.5 1.5 0 1 0 9 20 Z M16 20 A1.5 1.5 0 1 0 19 20 A1.5 1.5 0 1 0 16 20 Z" styleClass="portal-icono" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="6.0">
+                           <children>
+                              <Label styleClass="portal-tile-titulo" text="Comprar material" />
+                              <Label maxWidth="330.0" styleClass="portal-tile-texto" text="Aparta productos de nuestro almacén y págalos al recogerlos." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Ver los productos disponibles" />
+               </tooltip>
+            </Button>
+            <Button fx:id="btnMisServicios" alignment="CENTER_LEFT" contentDisplay="GRAPHIC_ONLY" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="150.0" mnemonicParsing="false" onAction="#abrirMisServicios" styleClass="portal-tile" text="Mis citas y pedidos" GridPane.columnIndex="1" GridPane.rowIndex="1">
+               <graphic>
+                  <HBox alignment="CENTER_LEFT" fillHeight="false" spacing="20.0">
+                     <children>
+                        <StackPane minHeight="76.0" minWidth="76.0" styleClass="icono-morado">
+                           <children>
+                              <Circle radius="38.0" styleClass="portal-icono-fondo" />
+                              <SVGPath content="M8 4 H16 V7 H8 Z M6 5.5 H4.5 V21 H19.5 V5.5 H18 M8 12 H16 M8 16 H13" styleClass="portal-icono" />
+                           </children>
+                        </StackPane>
+                        <VBox alignment="CENTER_LEFT" spacing="6.0">
+                           <children>
+                              <Label styleClass="portal-tile-titulo" text="Mis citas y pedidos" />
+                              <Label maxWidth="330.0" styleClass="portal-tile-texto" text="Revisa cómo va todo lo que nos pediste y cancela si lo necesitas." wrapText="true" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+               </graphic>
+               <tooltip>
+                  <Tooltip text="Ver el estado de tus citas, compras y proyectos" />
+               </tooltip>
+            </Button>
+         </children>
+      </GridPane>
+
+      <!-- Avisos -->
+      <Label fx:id="lblAvisoPedido" managed="false" maxWidth="1.7976931348623157E308" styleClass="portal-aviso-exito" text="Tienes un pedido listo para recoger." visible="false" wrapText="true" />
+      <Label fx:id="lblAyudaInicio" maxWidth="1.7976931348623157E308" styleClass="portal-aviso" text="¿Tienes dudas? Toca el botón naranja «Ayuda» que está arriba a la derecha." wrapText="true" />
+   </children>
+</VBox>

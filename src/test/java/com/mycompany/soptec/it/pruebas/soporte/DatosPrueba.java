@@ -7,6 +7,7 @@ import com.mycompany.soptec.it.modelo.Levantamiento;
 import com.mycompany.soptec.it.modelo.Material;
 import com.mycompany.soptec.it.modelo.Proveedor;
 import com.mycompany.soptec.it.modelo.Proyecto;
+import com.mycompany.soptec.it.modelo.Servicio;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -86,6 +87,11 @@ public final class DatosPrueba {
     public static Levantamiento nuevoLevantamiento(int idProyecto, Integer idCita) {
         return new Levantamiento(0, LocalDate.now(), null, "24 nodos Cat6 de prueba",
                 idProyecto, idCita, true, null, null, null);
+    }
+
+    public static Servicio nuevoServicio(String precio) {
+        return new Servicio(0, "Servicio Prueba " + BASE + "-" + siguiente(), "Servicio de prueba",
+                new BigDecimal(precio), null, true);
     }
 
     public static Path crearPng(Path carpeta, String nombre) throws IOException {
