@@ -24,9 +24,20 @@ public class App extends Application {
 
     private static final boolean PANTALLA_COMPLETA = false;
     private static Scene scene;
+    private static javafx.application.HostServices servicios;
+
+    /** Abre un archivo (PDF, Word, imagen...) con el programa predeterminado de Windows. */
+    public static boolean abrirArchivo(java.nio.file.Path archivo) {
+        if (servicios == null || archivo == null || !java.nio.file.Files.exists(archivo)) {
+            return false;
+        }
+        servicios.showDocument(archivo.toUri().toString());
+        return true;
+    }
 
     @Override
     public void start(Stage stage) {
+        servicios = getHostServices();
         // Recuperación ante errores no previstos: se registran en el log y el usuario recibe un mensaje claro;
         // la ventana sigue abierta para que pueda continuar trabajando (no hay cierre inesperado).
         Thread.setDefaultUncaughtExceptionHandler((t, ex) -> {

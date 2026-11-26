@@ -130,7 +130,19 @@ public class SeguimientoController implements Initializable {
                         "No se encontró ningún proyecto que coincida con '" + texto + "'.");
                 return;
             }
-            mostrarProyecto(encontrado);
+            // La lista de arriba también cambia al proyecto encontrado (antes se quedaba con el anterior)
+            final int idEncontrado = encontrado.getIdProyecto();
+            Proyecto enLista = cmbProyectos.getItems().stream()
+                    .filter(pr -> pr != null && pr.getIdProyecto() == idEncontrado)
+                    .findFirst().orElse(null);
+            if (enLista != null && enLista != cmbProyectos.getValue()) {
+                cmbProyectos.setValue(enLista); // el listener muestra el proyecto
+            } else {
+                if (enLista == null) {
+                    cmbProyectos.setValue(null);
+                }
+                mostrarProyecto(encontrado);
+            }
         } catch (Exception ex) {
             AlertaUtil.errorControlado(MODULO, "BUSCAR_PROYECTO", ex);
         }
@@ -146,7 +158,7 @@ public class SeguimientoController implements Initializable {
         lblEstadoProyecto.setText(estado);
         lblEstadoProyecto.getStyleClass().setAll("label", "badge", Tablas.claseEstado(estado));
 
-        int avance = InicioController.porcentajePorEstado(estado);
+        int avance = InicioController.avanceReal().getOrDefault(p.getIdProyecto(), InicioController.porcentajePorEstado(estado));
         pbAvance.setProgress(avance / 100.0);
         lblAvance.setText(avance + " %");
 

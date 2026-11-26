@@ -168,5 +168,9 @@ INSERT INTO pago (id_pago, id_proyecto, id_venta, concepto, monto, fecha_pago, m
 INSERT INTO orden_compra (id_orden_compra, id_proyecto, id_proveedor, fecha_orden, total_compra, tiempo_entrega, estado) VALUES
 (1, 1, 1, '2026-11-05', 8490.00, '2026-11-09', 'Recibida');
 INSERT INTO orden_compra_material (id_orden_compra, id_material, cantidad) VALUES (1, 1, 3), (1, 2, 3);
+-- (26/11/2026) Orden pendiente de recibir para la demo en vivo (Victor: «Registrar recepcion»)
+INSERT INTO orden_compra (id_orden_compra, id_proyecto, id_proveedor, fecha_orden, total_compra, tiempo_entrega, estado) VALUES
+(2, NULL, 3, '2026-11-26', 10750.00, '2026-12-01', 'Solicitada');
+INSERT INTO orden_compra_material (id_orden_compra, id_material, cantidad) VALUES (2, 5, 5);
 
 INSERT INTO proyecto_material (id_proyecto, id_material, cantidad) VALUES (1, 1, 2), (1, 2, 1), (2, 1, 1);

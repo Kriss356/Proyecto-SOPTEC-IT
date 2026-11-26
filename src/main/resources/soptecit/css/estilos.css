@@ -1164,3 +1164,122 @@
 .lista-casillas .list-cell { -fx-padding: 6 10 6 10; -fx-background-color: white; }
 .lista-casillas .list-cell:filled:hover { -fx-background-color: -c-primario-suave; }
 .texto-ayuda { -fx-text-fill: -c-tenue; -fx-font-size: 11.5px; }
+
+/* =====================================================================
+   EDICIÓN RÁPIDA (botón lápiz en tablas y formulario en modo edición)
+   ===================================================================== */
+.boton-editar-fila {
+    -fx-background-color: -c-primario-suave;
+    -fx-background-radius: 8;
+    -fx-padding: 4 7;
+    -fx-cursor: hand;
+}
+.boton-editar-fila:hover { -fx-background-color: -c-primario; }
+.icono-editar {
+    -fx-fill: transparent;
+    -fx-stroke: -c-primario;
+    -fx-stroke-width: 1.8;
+    -fx-stroke-line-cap: round;
+    -fx-stroke-line-join: round;
+    -fx-scale-x: 0.75;
+    -fx-scale-y: 0.75;
+}
+.boton-editar-fila:hover .icono-editar { -fx-stroke: white; }
+.table-row-cell:selected .boton-editar-fila { -fx-background-color: white; }
+.titulo-editando { -fx-text-fill: -c-primario; }
+.chip-modo {
+    -fx-background-color: -c-verde-suave;
+    -fx-background-radius: 10;
+    -fx-text-fill: -c-verde-osc;
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 11px;
+    -fx-padding: 4 10;
+}
+.chip-modo-editando {
+    -fx-background-color: -c-primario-suave;
+    -fx-text-fill: -c-primario-osc;
+}
+.texto-ayuda { -fx-text-fill: #8593A6; -fx-font-size: 11px; }
+
+/* Campos que se llenan solos (solo lectura) */
+.campo-auto, .campo-auto:focused {
+    -fx-background-color: -c-fondo;
+    -fx-border-color: -c-borde;
+    -fx-text-fill: -c-texto;
+    -fx-pref-height: 32;
+}
+.campo-auto-lleno { -fx-background-color: -c-verde-suave; -fx-border-color: #BFE3C2; }
+/* Combo grande del portal (fácil de leer y de tocar) */
+.portal .combo-box, .combo-portal { -fx-font-size: 18px; -fx-pref-height: 50; }
+.combo-portal .list-cell { -fx-padding: 8 14; -fx-font-size: 17px; }
+
+/* Búsqueda, autocompletado y texto ampliado */
+.link-ampliar { -fx-text-fill: -c-primario; -fx-font-size: 11px; -fx-padding: 0 2; -fx-border-color: transparent; }
+.link-ampliar:hover { -fx-underline: true; }
+.area-ampliada { -fx-font-size: 15px; }
+.aviso-busqueda { -fx-font-size: 12px; -fx-background-color: -c-navy; -fx-text-fill: white; -fx-background-radius: 8; }
+.busqueda-global-popup { -fx-background-color: white; -fx-background-radius: 12; -fx-border-color: -c-borde; -fx-border-radius: 12; -fx-effect: dropshadow(gaussian, rgba(23,41,65,0.18), 18, 0.2, 0, 4); }
+.busqueda-global-grupo { -fx-text-fill: #8593A6; -fx-font-family: "Poppins SemiBold"; -fx-font-size: 11px; -fx-padding: 6 14 2 14; }
+.busqueda-global-item { -fx-background-color: transparent; -fx-padding: 6 14; -fx-cursor: hand; -fx-background-radius: 8; }
+.busqueda-global-item:hover, .busqueda-global-item:focused { -fx-background-color: -c-primario-suave; }
+.busqueda-global-titulo { -fx-text-fill: -c-texto; -fx-font-size: 13px; }
+.busqueda-global-detalle { -fx-text-fill: #8593A6; -fx-font-size: 11px; }
+.texto-alerta { -fx-text-fill: -c-rojo; -fx-font-family: "Poppins SemiBold"; }
+
+/* ===== Calendario grande del portal (meses completos, hasta 6 meses adelante) ===== */
+.cal-portal {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-border-color: -c-borde;
+    -fx-border-radius: 16;
+    -fx-padding: 16;
+}
+.cal-mes { -fx-font-family: "Poppins SemiBold"; -fx-font-size: 22px; -fx-text-fill: -c-navy; }
+.cal-semana { -fx-font-family: "Poppins SemiBold"; -fx-font-size: 14px; -fx-text-fill: #8593A6; }
+.cal-dia {
+    -fx-background-color: white;
+    -fx-background-radius: 12;
+    -fx-border-color: -c-borde-campo;
+    -fx-border-radius: 12;
+    -fx-border-width: 2;
+    -fx-font-family: "Poppins SemiBold";
+    -fx-font-size: 18px;
+    -fx-text-fill: -c-texto;
+    -fx-text-alignment: center;
+    -fx-min-height: 58;
+    -fx-cursor: hand;
+}
+.cal-dia:hover { -fx-border-color: -c-primario; -fx-background-color: -c-primario-suave; }
+.cal-dia:selected { -fx-background-color: -c-navy; -fx-border-color: -c-navy; -fx-text-fill: white; }
+.cal-dia-apagado, .cal-dia:disabled { -fx-opacity: 0.35; -fx-background-color: -c-fondo; }
+
+/* ===== Calendarios de todo el sistema: más grandes y fáciles de leer ===== */
+.date-picker-popup { -fx-font-size: 15px; }
+.date-picker-popup > .month-year-pane { -fx-padding: 10 8 10 8; }
+.date-picker-popup .spinner .label { -fx-font-family: "Poppins SemiBold"; -fx-font-size: 16px; }
+.date-picker-popup .day-cell { -fx-padding: 9 11 9 11; -fx-font-size: 15px; }
+.date-picker-popup .today { -fx-background-color: -c-primario-suave; -fx-text-fill: -c-primario-osc; }
+.date-picker-popup .selected { -fx-background-color: -c-primario; -fx-text-fill: white; }
+.date-picker-popup .day-name-cell { -fx-font-family: "Poppins SemiBold"; -fx-font-size: 13px; }
+.date-picker-popup .previous-month, .date-picker-popup .next-month { -fx-opacity: 0.45; }
+/* Categorías de la tienda del portal */
+.chip-categoria {
+    -fx-background-color: white;
+    -fx-background-radius: 20;
+    -fx-border-color: -c-borde-campo;
+    -fx-border-radius: 20;
+    -fx-border-width: 1.5;
+    -fx-font-family: "Poppins Medium";
+    -fx-font-size: 15px;
+    -fx-text-fill: -c-texto;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+.chip-categoria:hover { -fx-border-color: -c-primario; }
+.chip-categoria:selected { -fx-background-color: -c-primario; -fx-border-color: -c-primario; -fx-text-fill: white; }
+/* Campo obligatorio que faltó al guardar */
+.text-field.campo-error, .text-area.campo-error, .combo-box-base.campo-error {
+    -fx-border-color: -c-rojo;
+    -fx-border-width: 2;
+    -fx-background-color: #FFF5F5;
+}

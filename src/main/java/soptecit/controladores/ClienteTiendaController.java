@@ -21,6 +21,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -46,6 +48,7 @@ public class ClienteTiendaController implements Initializable {
     @FXML private TextField txtBuscar;
     @FXML private Button btnVerTodo;
     @FXML private Label lblResultados;
+    @FXML private FlowPane flowCategorias;
     @FXML private Label lblSinProductos;
     @FXML private FlowPane flowProductos;
     @FXML private Label lblPiezas;
@@ -60,8 +63,40 @@ public class ClienteTiendaController implements Initializable {
     /** id_material → cantidad en el pedido. */
     private final Map<Integer, Integer> carrito = new LinkedHashMap<>();
 
+    /** Categorías para encontrar las cosas sin tener que escribir: {nombre, palabras clave}. */
+    private static final String[][] CATEGORIAS = {
+        {"Todo", ""},
+        {"Cables", "cable|bobina|patch cord|utp"},
+        {"Conectores y placas", "conector|jack|rj45|placa|faceplate|caja de montaje|bota"},
+        {"Internet y Wi-Fi", "router|switch|access point|wi-fi|poe|firewall|sfp|inyector"},
+        {"Cámaras", "camara|nvr|disco duro|videovigilancia"},
+        {"Racks y gabinetes", "rack|gabinete|patch panel|organizador|charola (bandeja)|pdu|multicontacto"},
+        {"Canaleta y tubo", "canaleta|conduit|curva|charola tipo malla|registro"},
+        {"Fibra óptica", "fibra|pigtail|jumper|odf|empalme|convertidor"},
+        {"Energía", "no break|ups"},
+        {"Accesorios", "cincho|velcro|taquete|etiqueta|grapa|tornillo"}
+    };
+    private final ToggleGroup grupoCategorias = new ToggleGroup();
+    private String categoriaActual = "";
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        for (String[] cat : CATEGORIAS) {
+            ToggleButton b = new ToggleButton(cat[0]);
+            b.setUserData(cat[1]);
+            b.setToggleGroup(grupoCategorias);
+            b.getStyleClass().add("chip-categoria");
+            flowCategorias.getChildren().add(b);
+        }
+        grupoCategorias.selectedToggleProperty().addListener((o, a, n) -> {
+            if (n == null) {
+                grupoCategorias.selectToggle(a);
+                return;
+            }
+            categoriaActual = (String) n.getUserData();
+            pintarCatalogo();
+        });
+        grupoCategorias.selectToggle(grupoCategorias.getToggles().get(0));
         txtBuscar.textProperty().addListener((o, a, n) -> pintarCatalogo());
         cargarMateriales();
         pintarCarrito();
@@ -87,11 +122,19 @@ public class ClienteTiendaController implements Initializable {
 
     private void pintarCatalogo() {
         flowProductos.getChildren().clear();
-        String filtro = txtBuscar.getText() == null ? "" : txtBuscar.getText().trim().toLowerCase();
+        // Sin importar mayúsculas ni acentos ("camara" encuentra "Cámara"); varias palabras se buscan juntas
+        String[] palabras = normalizar(txtBuscar.getText()).split("\\s+");
         int mostrados = 0;
         for (Material m : materiales.values()) {
-            String nombre = m.getDescripcionMaterial() == null ? "" : m.getDescripcionMaterial();
-            if (!filtro.isEmpty() && !nombre.toLowerCase().contains(filtro)) {
+            String nombre = normalizar(m.getDescripcionMaterial());
+            boolean coincide = true;
+            for (String p : palabras) {
+                if (!p.isEmpty() && !nombre.contains(p)) {
+                    coincide = false;
+                    break;
+                }
+            }
+            if (!coincide || !enCategoria(nombre)) {
                 continue;
             }
             flowProductos.getChildren().add(crearTarjeta(m));
@@ -181,7 +224,25 @@ public class ClienteTiendaController implements Initializable {
     @FXML
     private void verTodo(ActionEvent event) {
         txtBuscar.clear();
+        grupoCategorias.selectToggle(grupoCategorias.getToggles().get(0));
         cargarMateriales();
+    }
+
+    private boolean enCategoria(String nombreNormalizado) {
+        if (categoriaActual == null || categoriaActual.isEmpty()) {
+            return true;
+        }
+        for (String clave : categoriaActual.split("\\|")) {
+            if (nombreNormalizado.contains(clave)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalizar(String texto) {
+        return java.text.Normalizer.normalize(texto == null ? "" : texto, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "").toLowerCase(Locale.ROOT).trim();
     }
 
     // ------------------------------------------------------------------ pedido

@@ -10,6 +10,8 @@ public class Levantamiento {
     private int idLevantamiento;
     private LocalDate fechaVisita;
     private String croquis;
+    /** Ruta del documento del técnico (PDF, Word, Excel o imagen); puede ser null. */
+    private String documento;
     private String observacionesTecnicas;
     private int idProyecto;
     private Integer idCita;
@@ -134,5 +136,13 @@ public class Levantamiento {
     @Override
     public String toString() {
         return "Levantamiento " + fechaVisita + " · " + getProyectoDescriptivo();
+    }
+
+    public String getDocumento() {
+        return documento;
+    }
+
+    public void setDocumento(String documento) {
+        this.documento = documento;
     }
 }

@@ -1,5 +1,9 @@
 package soptecit.controladores;
 
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.GridPane;
+import javafx.geometry.Pos;
+import java.time.YearMonth;
 import com.mycompany.soptec.it.excepciones.SoptecException;
 import com.mycompany.soptec.it.modelo.Cliente;
 import com.mycompany.soptec.it.servicio.PortalClienteService;
@@ -16,6 +20,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -26,6 +31,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import soptecit.util.Catalogos;
 import soptecit.util.SesionCliente;
 
 /**
@@ -52,6 +58,7 @@ public class ClienteCitaController implements Initializable {
     @FXML private TextField txtCalle;
     @FXML private TextField txtNumero;
     @FXML private TextField txtColonia;
+    @FXML private ComboBox<String> cmbEstadoDomicilio;
     @FXML private TextArea txtNota;
 
     @FXML private VBox paso2;
@@ -80,6 +87,11 @@ public class ClienteCitaController implements Initializable {
     private final ToggleGroup grupoDias = new ToggleGroup();
     private final ToggleGroup grupoHoras = new ToggleGroup();
     private int paso = 1;
+    /** Día elegido en el calendario (se conserva aunque se cambie de mes). */
+    private LocalDate fechaElegida;
+    /** Mes que se ve en el calendario. */
+    private YearMonth mesVisible;
+    private boolean reconstruyendo;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -97,17 +109,20 @@ public class ClienteCitaController implements Initializable {
         mantenerSeleccion(grupoDias);
         mantenerSeleccion(grupoHoras);
         grupoDias.selectedToggleProperty().addListener((o, a, n) -> {
-            if (n != null) {
-                cargarHoras((LocalDate) n.getUserData());
+            if (n != null && !reconstruyendo) {
+                fechaElegida = (LocalDate) n.getUserData();
+                cargarHoras(fechaElegida);
             }
         });
         grupoHoras.selectedToggleProperty().addListener((o, a, n) -> mostrarError(null));
 
         Cliente c = SesionCliente.getCliente();
+        Catalogos.configurarEstados(cmbEstadoDomicilio);
         if (c != null) {
             txtCalle.setText(c.getCalle());
             txtNumero.setText(c.getNumero());
             txtColonia.setText(c.getColonia());
+            Catalogos.seleccionarEstado(cmbEstadoDomicilio, c.getEstado());
         }
         crearBotonesDeDias();
         mostrarPaso(1);
@@ -129,21 +144,109 @@ public class ClienteCitaController implements Initializable {
 
     // ------------------------------------------------------------------ paso 2
 
+    /**
+     * Calendario grande de meses: el cliente puede elegir cualquier día hasta 6 meses adelante
+     * (por ejemplo, una cita para enero). Los domingos y los días pasados aparecen apagados.
+     */
     private void crearBotonesDeDias() {
-        flowDias.getChildren().clear();
-        DateTimeFormatter diaSemana = DateTimeFormatter.ofPattern("EEE", ES_MX);
-        DateTimeFormatter mes = DateTimeFormatter.ofPattern("MMM", ES_MX);
-        LocalDate hoy = LocalDate.now();
-        for (LocalDate d : service.diasDisponibles()) {
-            String encabezado = d.equals(hoy) ? "Hoy"
-                    : d.equals(hoy.plusDays(1)) ? "Mañana" : capitalizar(d.format(diaSemana).replace(".", ""));
-            ToggleButton b = new ToggleButton(encabezado + "\n" + d.getDayOfMonth() + "\n" + d.format(mes).replace(".", ""));
-            b.setUserData(d);
-            b.setToggleGroup(grupoDias);
-            b.getStyleClass().add("dia-boton");
-            b.setTooltip(new Tooltip(capitalizar(fechaLarga(d))));
-            flowDias.getChildren().add(b);
+        if (mesVisible == null) {
+            mesVisible = YearMonth.from(service.primerDiaDisponible());
         }
+        flowDias.getChildren().clear();
+        reconstruyendo = true;
+        try {
+            grupoDias.getToggles().clear();
+        } finally {
+            reconstruyendo = false;
+        }
+        YearMonth primero = YearMonth.from(service.primerDiaDisponible());
+        YearMonth ultimo = YearMonth.from(service.ultimoDiaDisponible());
+
+        Button anterior = new Button("◀  Mes anterior");
+        anterior.getStyleClass().addAll("boton-secundario", "portal-boton-medio");
+        anterior.setDisable(!mesVisible.isAfter(primero));
+        anterior.setOnAction(e -> {
+            mesVisible = mesVisible.minusMonths(1);
+            crearBotonesDeDias();
+        });
+        Button siguienteMes = new Button("Mes siguiente  ▶");
+        siguienteMes.getStyleClass().addAll("boton-secundario", "portal-boton-medio");
+        siguienteMes.setDisable(!mesVisible.isBefore(ultimo));
+        siguienteMes.setOnAction(e -> {
+            mesVisible = mesVisible.plusMonths(1);
+            crearBotonesDeDias();
+        });
+        Label titulo = new Label(capitalizar(mesVisible.format(DateTimeFormatter.ofPattern("MMMM yyyy", ES_MX))));
+        titulo.getStyleClass().add("cal-mes");
+        titulo.setMaxWidth(Double.MAX_VALUE);
+        titulo.setAlignment(Pos.CENTER);
+        HBox.setHgrow(titulo, Priority.ALWAYS);
+        HBox cabecera = new HBox(12, anterior, titulo, siguienteMes);
+        cabecera.setAlignment(Pos.CENTER);
+
+        GridPane rejilla = new GridPane();
+        rejilla.setHgap(8);
+        rejilla.setVgap(8);
+        String[] nombres = {"Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"};
+        for (int c = 0; c < 7; c++) {
+            Label n = new Label(nombres[c]);
+            n.getStyleClass().add("cal-semana");
+            n.setMaxWidth(Double.MAX_VALUE);
+            n.setAlignment(Pos.CENTER);
+            rejilla.add(n, c, 0);
+        }
+        LocalDate hoy = LocalDate.now();
+        LocalDate dia = mesVisible.atDay(1);
+        int fila = 1;
+        int columna = dia.getDayOfWeek().getValue() - 1;
+        ToggleButton elegido = null;
+        while (YearMonth.from(dia).equals(mesVisible)) {
+            ToggleButton b = new ToggleButton(dia.equals(hoy) ? "Hoy\n" + dia.getDayOfMonth() : String.valueOf(dia.getDayOfMonth()));
+            b.setUserData(dia);
+            b.getStyleClass().add("cal-dia");
+            b.setMaxWidth(Double.MAX_VALUE);
+            if (service.diaDisponible(dia)) {
+                b.setToggleGroup(grupoDias);
+                b.setTooltip(new Tooltip(capitalizar(fechaLarga(dia))));
+                if (dia.equals(fechaElegida)) {
+                    elegido = b;
+                }
+            } else {
+                b.setDisable(true);
+                b.getStyleClass().add("cal-dia-apagado");
+            }
+            rejilla.add(b, columna, fila);
+            columna++;
+            if (columna == 7) {
+                columna = 0;
+                fila++;
+            }
+            dia = dia.plusDays(1);
+        }
+        for (int c = 0; c < 7; c++) {
+            javafx.scene.layout.ColumnConstraints cc = new javafx.scene.layout.ColumnConstraints();
+            cc.setPercentWidth(100.0 / 7);
+            rejilla.getColumnConstraints().add(cc);
+        }
+        if (elegido != null) {
+            reconstruyendo = true;
+            try {
+                grupoDias.selectToggle(elegido);
+            } finally {
+                reconstruyendo = false;
+            }
+        }
+
+        Label nota = new Label("Puedes elegir cualquier día hasta el " + fechaLarga(service.ultimoDiaDisponible())
+                + ". Los domingos no abrimos." + (fechaElegida != null ? "   Día elegido: " + fechaLarga(fechaElegida) : ""));
+        nota.getStyleClass().add("portal-texto-tenue");
+        nota.setWrapText(true);
+
+        VBox calendario = new VBox(12, cabecera, rejilla, nota);
+        calendario.getStyleClass().add("cal-portal");
+        calendario.setPrefWidth(740);
+        calendario.setMaxWidth(780);
+        flowDias.getChildren().add(calendario);
     }
 
     private void cargarHoras(LocalDate fecha) {
@@ -194,8 +297,8 @@ public class ClienteCitaController implements Initializable {
                 mostrarPaso(2);
                 break;
             case 2:
-                if (grupoDias.getSelectedToggle() == null) {
-                    mostrarError("Primero toca el día que prefieras.");
+                if (fechaElegida == null) {
+                    mostrarError("Primero toca el día que prefieras en el calendario.");
                     return;
                 }
                 if (grupoHoras.getSelectedToggle() == null) {
@@ -223,11 +326,12 @@ public class ClienteCitaController implements Initializable {
     }
 
     private void confirmar() {
-        LocalDate fecha = (LocalDate) grupoDias.getSelectedToggle().getUserData();
+        LocalDate fecha = fechaElegida;
         LocalTime hora = (LocalTime) grupoHoras.getSelectedToggle().getUserData();
         try {
             service.solicitarCita(SesionCliente.getCliente(), servicioElegido(), fecha, hora,
-                    txtCalle.getText(), txtNumero.getText(), txtColonia.getText(), txtNota.getText());
+                    txtCalle.getText(), txtNumero.getText(), txtColonia.getText(), cmbEstadoDomicilio.getValue(),
+                    txtNota.getText());
             Cliente c = SesionCliente.getCliente();
             lblListoDetalle.setText(servicioElegido() + " para el " + fechaLarga(fecha) + " a las " + horaTexto(hora)
                     + "\nTe llamaremos al " + ClienteAccesoController.formatear(c.getTelefono())
@@ -246,13 +350,14 @@ public class ClienteCitaController implements Initializable {
     }
 
     private void llenarResumen() {
-        LocalDate fecha = (LocalDate) grupoDias.getSelectedToggle().getUserData();
+        LocalDate fecha = fechaElegida;
         LocalTime hora = (LocalTime) grupoHoras.getSelectedToggle().getUserData();
         lblResServicio.setText(servicioElegido());
         lblResDia.setText(capitalizar(fechaLarga(fecha)));
         lblResHora.setText(horaTexto(hora));
         lblResDomicilio.setText(esInstalacion()
                 ? txtCalle.getText().trim() + " #" + txtNumero.getText().trim() + ", Col. " + txtColonia.getText().trim()
+                        + (cmbEstadoDomicilio.getValue() != null ? ", " + cmbEstadoDomicilio.getValue() : "")
                 : "En nuestra tienda / lo confirmamos por teléfono");
         String nota = txtNota.getText() == null ? "" : txtNota.getText().trim();
         lblResNota.setText(nota.isEmpty() ? "(No escribiste nada, está bien)" : nota);

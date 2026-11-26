@@ -4,6 +4,7 @@ import com.mycompany.soptec.it.excepciones.SoptecException;
 import java.net.URL;
 import java.util.Optional;
 import javafx.scene.control.Alert;
+import javafx.scene.layout.Region;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Window;
 
@@ -27,7 +28,32 @@ public final class AlertaUtil {
     }
 
     public static void error(String titulo, String mensaje) {
+        if (titulo != null && titulo.toLowerCase().startsWith("falta")) {
+            mensaje = mensaje + notaCamposMarcados();
+        }
         mostrar(Alert.AlertType.ERROR, titulo, mensaje);
+    }
+
+    /**
+     * Gancho que pone la pantalla principal: marca en rojo los campos obligatorios vacíos de la
+     * pantalla abierta y devuelve cuántos marcó (para avisarlo en el mensaje).
+     */
+    private static java.util.function.IntSupplier marcarCamposVacios;
+
+    public static void setMarcarCamposVacios(java.util.function.IntSupplier gancho) {
+        marcarCamposVacios = gancho;
+    }
+
+    private static String notaCamposMarcados() {
+        if (marcarCamposVacios == null) {
+            return "";
+        }
+        try {
+            int n = marcarCamposVacios.getAsInt();
+            return n == 0 ? "" : "\n\nTe marcamos en rojo " + (n == 1 ? "el campo que falta." : "los " + n + " campos que faltan.");
+        } catch (RuntimeException ex) {
+            return "";
+        }
     }
 
     /** Mensaje genérico para errores no previstos (nunca muestra trazas ni SQL). */
@@ -37,7 +63,8 @@ public final class AlertaUtil {
 
     public static void errorControlado(String modulo, String operacion, Throwable ex) {
         if (ex instanceof SoptecException) {
-            mostrar(Alert.AlertType.WARNING, tituloPara(ex), mensajeUsuario(ex));
+            String nota = "VALIDACION".equals(((SoptecException) ex).getCategoria()) ? notaCamposMarcados() : "";
+            mostrar(Alert.AlertType.WARNING, tituloPara(ex), mensajeUsuario(ex) + nota);
         } else {
             AppLogger.registrarExcepcion(modulo, "ControladorUI", operacion, ex);
             mostrar(Alert.AlertType.ERROR, tituloPara(ex), mensajeUsuario(ex));
@@ -84,8 +111,42 @@ public final class AlertaUtil {
         return res.isPresent() && res.get() == ButtonType.OK;
     }
 
+    /**
+     * Pregunta con varias opciones (botones con texto propio).
+     *
+     * @return índice de la opción elegida, o -1 si se cerró / canceló
+     */
+    public static int elegir(String titulo, String mensaje, String... opciones) {
+        Alert alerta = crear(Alert.AlertType.CONFIRMATION, titulo, mensaje);
+        java.util.List<ButtonType> botones = new java.util.ArrayList<>();
+        for (int i = 0; i < opciones.length; i++) {
+            boolean ultima = i == opciones.length - 1;
+            botones.add(new ButtonType(opciones[i], ultima && opciones[i].toLowerCase().startsWith("cancelar")
+                    ? javafx.scene.control.ButtonBar.ButtonData.CANCEL_CLOSE
+                    : (i == 0 ? javafx.scene.control.ButtonBar.ButtonData.OK_DONE
+                            : javafx.scene.control.ButtonBar.ButtonData.OTHER)));
+        }
+        alerta.getButtonTypes().setAll(botones);
+        Optional<ButtonType> res = alerta.showAndWait();
+        return res.isPresent() ? botones.indexOf(res.get()) : -1;
+    }
+
     private static void mostrar(Alert.AlertType tipo, String titulo, String mensaje) {
+        if ((tipo == Alert.AlertType.ERROR || tipo == Alert.AlertType.WARNING) && alMostrarAviso != null) {
+            try {
+                alMostrarAviso.run();
+            } catch (RuntimeException ignorada) {
+                // el aviso se muestra de todos modos
+            }
+        }
         crear(tipo, titulo, mensaje).showAndWait();
+    }
+
+    /** Gancho que se ejecuta al mostrar un error o advertencia (lo usa el aviso de cambios sin guardar). */
+    private static Runnable alMostrarAviso;
+
+    public static void setAlMostrarAviso(Runnable gancho) {
+        alMostrarAviso = gancho;
     }
 
     private static Alert crear(Alert.AlertType tipo, String titulo, String mensaje) {
@@ -93,6 +154,9 @@ public final class AlertaUtil {
         alerta.setTitle("SOPTEC-IT");
         alerta.setHeaderText(titulo);
         alerta.setContentText(mensaje);
+        // Los mensajes largos (varias líneas) se mostraban cortados con «...»:
+        // el cuadro ahora crece a lo alto lo necesario para que se lea completo.
+        alerta.getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         URL cssUrl = AlertaUtil.class.getResource(CSS);
         if (cssUrl != null) {
             alerta.getDialogPane().getStylesheets().add(cssUrl.toExternalForm());

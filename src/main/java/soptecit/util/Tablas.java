@@ -28,6 +28,9 @@ public final class Tablas {
     public static void cargar(TableView<String[]> tabla, String[][] filas) {
         for (int i = 0; i < tabla.getColumns().size(); i++) {
             final int indice = i;
+            if (tabla.getColumns().get(i).getStyleClass().contains("col-editar")) {
+                continue; // columna del botón Editar (la agrega soptecit.util.Edicion)
+            }
             TableColumn<String[], String> columna = (TableColumn<String[], String>) tabla.getColumns().get(i);
             columna.setCellValueFactory(c -> new SimpleStringProperty(
                     indice < c.getValue().length ? c.getValue()[indice] : ""));

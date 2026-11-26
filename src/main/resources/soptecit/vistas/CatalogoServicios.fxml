@@ -101,15 +101,15 @@
             <HBox spacing="8.0">
                <children>
                   <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiar" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardar" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizar" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnGuardarServicio" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardar" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnActualizarServicio" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizar" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
             <HBox spacing="8.0">
                <children>
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivar" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivar" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminar" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnDesactivarServicio" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivar" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnReactivarServicio" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivar" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnEliminarServicio" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminar" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
          </children>

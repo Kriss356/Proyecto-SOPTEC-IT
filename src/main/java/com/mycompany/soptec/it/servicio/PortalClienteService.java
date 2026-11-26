@@ -93,6 +93,29 @@ public class PortalClienteService {
     // ---------------------------------------------------------------- citas
 
     /** Días que se muestran para elegir: los próximos 10 días hábiles (sin domingos). */
+    /** Hasta cuántos meses adelante puede agendar el cliente desde el portal. */
+    public static final int MESES_ADELANTE = 6;
+
+    /** Primer día que se puede elegir (hoy, o mañana si ya pasó el horario de hoy). */
+    public LocalDate primerDiaDisponible() {
+        LocalDate d = LocalDate.now();
+        if (LocalTime.now().getHour() >= HORA_FIN) {
+            d = d.plusDays(1);
+        }
+        return d;
+    }
+
+    /** Último día que se puede elegir (6 meses adelante). */
+    public LocalDate ultimoDiaDisponible() {
+        return LocalDate.now().plusMonths(MESES_ADELANTE);
+    }
+
+    /** ¿Se puede pedir cita ese día? (no domingos, no días pasados, máximo 6 meses adelante). */
+    public boolean diaDisponible(LocalDate dia) {
+        return dia != null && dia.getDayOfWeek() != DayOfWeek.SUNDAY
+                && !dia.isBefore(primerDiaDisponible()) && !dia.isAfter(ultimoDiaDisponible());
+    }
+
     public List<LocalDate> diasDisponibles() {
         List<LocalDate> dias = new ArrayList<>();
         LocalDate d = LocalDate.now();
@@ -136,6 +159,12 @@ public class PortalClienteService {
      */
     public int solicitarCita(Cliente cliente, String servicio, LocalDate fecha, LocalTime hora,
             String calle, String numero, String colonia, String nota) throws SoptecException {
+        return solicitarCita(cliente, servicio, fecha, hora, calle, numero, colonia, null, nota);
+    }
+
+    /** Igual que la anterior, pero también guarda el estado (entidad) elegido del combo. */
+    public int solicitarCita(Cliente cliente, String servicio, LocalDate fecha, LocalTime hora,
+            String calle, String numero, String colonia, String estado, String nota) throws SoptecException {
         String op = "SOLICITAR_CITA";
         try {
             if (cliente == null) {
@@ -149,6 +178,10 @@ public class PortalClienteService {
             }
             if (fecha.getDayOfWeek() == DayOfWeek.SUNDAY) {
                 throw new ValidacionException(MODULO, op, "Los domingos no damos servicio. Elige otro día.");
+            }
+            if (fecha.isAfter(ultimoDiaDisponible())) {
+                throw new ValidacionException(MODULO, op, "Solo podemos agendar hasta " + MESES_ADELANTE
+                        + " meses adelante. Elige una fecha más cercana.");
             }
             String cal = Validador.opcional(calle);
             String num = Validador.opcional(numero);
@@ -169,13 +202,18 @@ public class PortalClienteService {
                     .append(" · Tel: ").append(cliente.getTelefono() != null ? cliente.getTelefono() : "-");
             if (cal != null || col != null) {
                 obs.append(" · Domicilio: ").append(cal != null ? cal : "").append(num != null ? " #" + num : "")
-                        .append(col != null ? ", Col. " + col : "");
+                        .append(col != null ? ", Col. " + col : "")
+                        .append(Validador.opcional(estado) != null ? ", " + estado.trim() : "");
             }
             if (not != null) {
                 obs.append(" · Nota: ").append(not);
             }
             if (cal != null && num != null && col != null) {
-                dao.actualizarDomicilio(cliente.getIdCliente(), cal, num, col);
+                String edo = Validador.opcional(estado);
+                dao.actualizarDomicilio(cliente.getIdCliente(), cal, num, col, edo);
+                if (edo != null) {
+                    cliente.setEstado(edo);
+                }
                 cliente.setCalle(cal);
                 cliente.setNumero(num);
                 cliente.setColonia(col);

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<title>Guion Corto de Demo en Vivo · SOPTEC-IT (rev. 26/11/2026)</title>
+<style>
+@page { size: letter; margin: 14mm 13mm 14mm 13mm; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", "DejaVu Sans", Arial, sans-serif; color:#1c2b3f; font-size: 9.6pt; line-height:1.42; margin:0; }
+.eyebrow { color:#f08328; font-weight:700; letter-spacing:.14em; font-size:7.6pt; text-transform:uppercase; }
+.top { display:flex; justify-content:space-between; align-items:flex-end; margin:3px 0 10px; }
+h1 { font-size:17pt; margin:0; color:#172941; }
+.meta { text-align:right; font-size:8pt; }
+.intro { display:flex; gap:10px; margin-bottom:12px; }
+.box { flex:1; background:#f2f5f9; border-radius:6px; padding:8px 10px; font-size:8.4pt; }
+.box.l { border-left:3px solid #f08328; }
+.box h4 { margin:0 0 4px; font-size:7.6pt; letter-spacing:.1em; text-transform:uppercase; }
+.box p { margin:0; }
+.check div { margin:1px 0; }
+code { background:#e1e7ef; padding:0 3px; border-radius:3px; font-size:8pt; }
+.turno { border:1px solid #e1e7ef; border-radius:7px; margin-bottom:12px; page-break-inside:avoid; overflow:hidden; }
+.cab { color:#fff; padding:5px 10px; display:flex; justify-content:space-between; align-items:center; }
+.cab b { font-size:11pt; } .cab span.sub { font-size:8.4pt; opacity:.9; margin-left:6px; }
+.cab .t { background:rgba(255,255,255,.22); border-radius:4px; padding:1px 7px; font-size:8pt; font-weight:700; }
+.c1{background:#1f4fd1}.c2{background:#e8590c}.c3{background:#2f9e44}.c4{background:#7b2fd6}.c5{background:#d92d2d}
+.cuerpo { padding:8px 10px 9px; }
+.pant { background:#f2f5f9; border-radius:5px; padding:6px 10px 6px; }
+.lbl { font-size:7.2pt; letter-spacing:.12em; font-weight:700; color:#4a5a70; text-transform:uppercase; margin:2px 0 3px; }
+ol { margin:0; padding-left:18px; } li { margin:1px 0; }
+.decir p { margin:3px 0; }
+.acc { color:#3188b3; font-weight:600; }
+.pasa { border-left:3px solid #f08328; background:#fdeee1; padding:3px 8px; margin-top:6px; font-size:8.4pt; }
+.pasa b { color:#c2410c; letter-spacing:.06em; font-size:7.6pt; margin-right:6px; }
+.nuevo { background:#fff3bf; border-radius:2px; padding:0 2px; }
+h2 { font-size:11pt; color:#172941; margin:14px 0 6px; }
+table { width:100%; border-collapse:collapse; font-size:8.3pt; }
+th { background:#172941; color:#fff; text-align:left; padding:4px 6px; }
+td { border-bottom:1px solid #e1e7ef; padding:4px 6px; vertical-align:top; }
+td:first-child { font-weight:700; width:33%; } td:nth-child(2) { width:13%; }
+.pie { text-align:right; color:#3188b3; font-size:7.6pt; margin-top:6px; }
+.nota { font-size:7.8pt; color:#4a5a70; margin-top:4px; }
+</style></head><body>
+
+<div class="eyebrow">Oscorp Co. × SOPTEC-IT · Continuación del pitch HTML</div>
+<div class="top"><h1>Guion Corto de Demo en Vivo</h1>
+<div class="meta"><b>Duración:</b> ~3:45 min · 5 turnos<br><b>Hilo:</b> Clienta Ana Gómez / Sofía Ramírez<br><b>Revisión:</b> 26/11/2026 · probado paso a paso</div></div>
+
+<div class="intro">
+ <div class="box l"><h4>Enlace directo desde la presentación HTML</h4>
+ <p>Al terminar la diapositiva 9 (<i>Presupuesto y Cierre ROI</i>), cambien a la app JavaFX en pantalla completa. No repitan quiénes son ni el problema de las libretas: vayan directo a mostrar <b>cómo funciona</b> cada módulo.</p></div>
+ <div class="box check"><h4>Listo antes de empezar</h4>
+  <div>☐ XAMPP: <b>Apache</b> y <b>MySQL</b> en verde.</div>
+  <div>☐ App abierta en <b>Login</b> (F11 pantalla completa).</div>
+  <div>☐ Teléfono de prueba: <code>3312345678</code> (Ana).</div>
+  <div>☐ Imagen <b>Topologia_Red_Oficina_Corporativa.png</b> en el Escritorio <span class="nota">(copia en SoptecIT/demo)</span>.</div>
+  <div class="nuevo">☐ Una orden de compra <b>«Solicitada»</b> en Compras-Almacén (OC-0002).</div>
+  <div class="nuevo">☐ Revisar el % actual de <i>Red de oficina corporativa</i> (el nuevo avance debe ser mayor).</div>
+ </div>
+</div>
+
+<div class="turno"><div class="cab c1"><div><b>1 · LEONARDO</b><span class="sub">Transición y Pantalla de Entrada</span></div><span class="t">0:00 – 0:25</span></div>
+<div class="cuerpo"><div class="pant"><div class="lbl">En pantalla</div><ol>
+<li>Sistema abierto en <b>Login</b>. Señalar acceso de empleados (derecha) y botón naranja <b>«Entrar como cliente»</b> (abajo).</li></ol></div>
+<div class="decir"><div class="lbl" style="margin-top:7px">Qué decir</div>
+<p>«Ya vimos la arquitectura y el presupuesto; ahora les mostramos el sistema operando en vivo. En esta pantalla de entrada, el personal ingresa con su usuario, contraseña y área; cada quien ve únicamente los módulos de su departamento.»</p>
+<p>«Abajo está el acceso directo para clientes. <span class="acc">[señalar «Entrar como cliente»]</span> Así es como inicia el flujo.»</p></div>
+<div class="pasa"><b>PASA A MANUEL:</b> «Manuel les muestra cómo entra y opera el cliente.»</div></div></div>
+
+<div class="turno"><div class="cab c2"><div><b>2 · MANUEL</b><span class="sub">Portal del Cliente (Ana Gómez)</span></div><span class="t">0:25 – 1:15</span></div>
+<div class="cuerpo"><div class="pant"><div class="lbl">En pantalla</div><ol>
+<li><b>Entrar como cliente</b> → escribir 3312345678 → <b>Continuar</b> (reconoce a «Ana»).</li>
+<li><b>Agendar una cita</b> → elegir <span class="nuevo"><b>Cotización / asesoría</b></span> → <b>Siguiente</b> → elegir día y <span class="nuevo">bajar para ver las horas libres</span> → <b>Siguiente</b> → <b>Confirmar mi cita</b>.</li>
+<li><b>Volver al inicio</b>, señalar <b>Pedir una instalación</b> → entrar a <b>Comprar material</b> (<span class="nuevo">+ → <b>Agregar</b> → <b>Apartar mi pedido</b> → <b>Aceptar</b></span>) → abrir <b>Mis citas y pedidos</b>.</li></ol></div>
+<div class="decir"><div class="lbl" style="margin-top:7px">Qué decir</div>
+<p>«El cliente entra solo con su número de teléfono, sin contraseñas. <span class="acc">[teclear 3312345678 y Continuar]</span> Si ya está registrado, el sistema lo reconoce de inmediato.»</p>
+<p>«Tiene cuatro funciones: en <b>Agendar una cita</b> <span class="acc">[clic]</span> elige el tipo de servicio y el sistema muestra únicamente los horarios disponibles para evitar empalmes. <b>Pedir una instalación</b> funciona igual, solicitando el domicilio.»</p>
+<p>«En <b>Comprar material</b> <span class="acc">[presionar +, Agregar y Apartar]</span> selecciona piezas y las aparta para pagar al recoger. Y en <b>Mis citas y pedidos</b> <span class="acc">[clic]</span> consulta en tiempo real si su solicitud está esperando confirmación, confirmada o atendida.»</p></div>
+<div class="pasa"><b>PASA A MIGUEL:</b> «Ahora veamos cómo recibe y cobra esta solicitud el área de Ventas con Miguel.»</div></div></div>
+
+<div class="turno"><div class="cab c3"><div><b>3 · MIGUEL</b><span class="sub">Ventas: Solicitudes, Citas, Venta y Factura</span></div><span class="t">1:15 – 2:00</span></div>
+<div class="cuerpo"><div class="pant"><div class="lbl">En pantalla</div><ol>
+<li>Salir del portal (<span class="nuevo"><b>Salir</b> → <b>Aceptar</b> → <b>Soy empleado</b></span>) → entrar como <b>Administrador general</b>.</li>
+<li><b>Solicitudes de clientes</b> → seleccionar cita de Ana → <b>Confirmar cita</b> → <b>Aceptar</b>.</li>
+<li><b>Citas</b> → seleccionar cita de <i>Sofía Ramírez</i> → bajar en el formulario para mostrar sus servicios.</li>
+<li><b>Ventas y facturación</b> → escribir <code>sofia</code> en el filtro <span class="nuevo">(se eligen solos su proyecto, cita y servicios)</span> → <b>Cargar</b> → método de pago y pago inicial → <b>Registrar venta</b> → <span class="nuevo"><b>Cancelar</b> en el aviso</span> → doble clic en la venta para abrir la factura.</li></ol></div>
+<div class="decir"><div class="lbl" style="margin-top:7px">Qué decir</div>
+<p>«Entrando como personal, en <b>Solicitudes de clientes</b> <span class="acc">[abrir y confirmar]</span> aparece la petición de Ana; al confirmarla, su estado cambia automáticamente en el portal del cliente.»</p>
+<p>«En <b>Citas</b> <span class="acc">[seleccionar a Sofía]</span> se administra la agenda y los servicios se eligen desde un catálogo fijo para no cometer errores de captura ni de precios.»</p>
+<p>«En <b>Ventas y facturación</b> <span class="acc">[elegir Sofía y clic en Cargar]</span> el botón Cargar importa los servicios de la cita, calcula el IVA del 16% y el total en automático. Registramos el anticipo y con doble clic <span class="acc">[registrar y doble clic]</span> se genera la factura lista para imprimir. Toda la venta se guarda de forma atómica: si ocurre un fallo a la mitad, no queda registrada de forma incompleta.»</p></div>
+<div class="pasa"><b>PASA A CHRISTIAN:</b> «Con la venta hecha, Christian muestra el levantamiento técnico y Administración.»</div></div></div>
+
+<div class="turno"><div class="cab c4"><div><b>4 · CHRISTIAN</b><span class="sub">Levantamientos (Topología de Red) y Administración</span></div><span class="t">2:00 – 2:45</span></div>
+<div class="cuerpo"><div class="pant"><div class="lbl">En pantalla</div><ol>
+<li><b>Levantamientos</b> → Proyecto asociado: <i>Red de oficina corporativa</i> <span class="nuevo">(se llenan solos cliente y cita)</span> → escribir observación → <b>Cargar</b> (arriba a la derecha) → imagen del Escritorio → <b>Guardar</b>.</li>
+<li><b>Administración › Revisión de propuestas</b> → seleccionar un proyecto → señalar botones aprobar / rechazar.</li>
+<li><b>Personal por proyecto</b> → elegir proyecto → marcar 2–3 empleados → <b>Guardar equipo del proyecto</b>.</li>
+<li><b>Cuentas por cobrar</b> → seleccionar venta de Sofía → capturar monto <span class="nuevo">y método de pago</span> → <b>Registrar pago</b>.</li></ol></div>
+<div class="decir"><div class="lbl" style="margin-top:7px">Qué decir</div>
+<p>«En <b>Levantamientos</b> <span class="acc">[elegir Red de oficina corporativa]</span> el sistema vincula en automático al cliente y la cita. El técnico registra lo que midió en sitio y sube la topología de red <span class="acc">[Cargar imagen]</span> para que quede disponible en el expediente.»</p>
+<p>«En <b>Administración</b> hay tres controles: en <b>Revisión de propuestas</b> <span class="acc">[abrir]</span> se aprueba o rechaza el proyecto; en <b>Personal por proyecto</b> <span class="acc">[palomear y guardar]</span> se asigna la cuadrilla en un solo guardado; y en <b>Cuentas por cobrar</b> <span class="acc">[escribir abono y Registrar pago]</span> se registran pagos parciales, actualizando el estatus a pendiente, parcial o pagada, bloqueando cualquier cobro mayor al saldo.»</p></div>
+<div class="pasa"><b>PASA A VÍCTOR:</b> «Víctor cierra mostrando Almacén, Instalaciones y Seguimiento del proyecto.»</div></div></div>
+
+<div class="turno"><div class="cab c5"><div><b>5 · VÍCTOR</b><span class="sub">Almacén, Instalaciones, Seguimiento y Cierre</span></div><span class="t">2:45 – 3:35</span></div>
+<div class="cuerpo"><div class="pant"><div class="lbl">En pantalla</div><ol>
+<li><b>Compras-Almacén</b> → señalar tarjeta <b>Bajo stock</b> y catálogo → pestaña <b>Órdenes de compra</b> → seleccionar orden «Solicitada» → <b>Registrar recepción</b> → <b>Aceptar</b>.</li>
+<li><b>Instalaciones</b> → clic en <i>Red de oficina corporativa</i> → capturar avance (<b>Tarea realizada</b>, horas, <span class="nuevo">% mayor al último</span>) → <b>Guardar avance</b>.</li>
+<li><b>Seguimiento de proyectos</b> → buscar <i>Ana</i> → mostrar línea de tiempo y resumen de costos → regresar a <b>Inicio</b>.</li></ol></div>
+<div class="decir"><div class="lbl" style="margin-top:7px">Qué decir</div>
+<p>«En <b>Compras-Almacén</b> <span class="acc">[señalar tarjetas]</span> controlamos el catálogo y la alerta de <b>Bajo stock</b> avisa cuando quedan 10 piezas o menos. Al llegar un pedido, con <b>Registrar recepción</b> <span class="acc">[clic]</span> el inventario suma automáticamente, y cuando se asigna material a una obra, se descuenta solo.»</p>
+<p>«En <b>Instalaciones</b> <span class="acc">[clic en el proyecto]</span> el técnico registra su avance diario y horas trabajadas; el porcentaje solo puede avanzar, nunca retroceder por error.»</p>
+<p>«Finalmente, en <b>Seguimiento de proyectos</b> <span class="acc">[buscar a Ana]</span> vemos en una sola línea de tiempo todo el proceso —Ventas, Levantamiento, Instalación y Cierre— junto con su porcentaje y costo total. <span class="acc">[regresar a Inicio]</span> Con esto concluimos la demostración en vivo. ¿Tienen alguna pregunta?»</p></div></div></div>
+
+<h2>Respuestas rápidas ante dudas de la demo en vivo</h2>
+<table><tr><th>Pregunta posible</th><th>Responde</th><th>Respuesta directa</th></tr>
+<tr><td>¿Si se va la luz a mitad de una venta?</td><td>Miguel</td><td>Lo guardado no se pierde; la venta usa transacción atómica (o se guarda completa o se revierte sin dejar datos a medias).</td></tr>
+<tr><td>¿El cliente necesita contraseña?</td><td>Manuel</td><td>No. Entra únicamente con su número de teléfono de 10 dígitos.</td></tr>
+<tr><td>¿Qué pasa si capturan un dato erróneo?</td><td>Christian</td><td>El sistema valida antes de guardar (ej. teléfono a 10 dígitos o no cobrar de más) y muestra el aviso exacto.</td></tr>
+<tr><td>¿Dónde se guardan las fotos y topologías de red?</td><td>Christian</td><td>En la carpeta local <code>Documentos › SOPTEC-IT › imágenes</code> (se crea automáticamente) y su ruta queda en MySQL.</td></tr>
+<tr><td>¿Qué pasa si se agota un material?</td><td>Víctor</td><td>Se activa la alerta de <b>Bajo stock (≤ 10)</b> y en la tienda del cliente solo se muestran artículos con existencia.</td></tr>
+<tr><td>¿Cualquier empleado ve todas las áreas?</td><td>Leonardo</td><td>No, la vista se filtra por el área elegida al entrar; solo el Administrador general tiene acceso completo.</td></tr>
+</table>
+<div class="pie">OSCORP CO. × SOPTEC-IT · Guion Corto de Demo en Vivo (Continuación Pitch V2) · Rev. 26/11/2026 — lo resaltado en amarillo es lo que cambió</div>
+</body></html>

@@ -53,6 +53,7 @@
                      <children>
                         <Label styleClass="tarjeta-titulo" text="Estado de cuenta por venta" />
                         <Region HBox.hgrow="ALWAYS" />
+                        <TextField fx:id="txtBuscarCuenta" prefWidth="210.0" promptText="Buscar folio, cliente o proyecto..." userData="tblCuentas" />
                         <CheckBox fx:id="chkSoloSaldo" mnemonicParsing="false" onAction="#cargar" selected="true" text="Solo con saldo" />
                         <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#cargar" styleClass="boton-secundario, boton-compacto" text="Refrescar" />
                      </children>
@@ -62,6 +63,7 @@
                         <TableColumn fx:id="colCtaFolio" prefWidth="70.0" text="Folio" />
                         <TableColumn fx:id="colCtaCliente" prefWidth="140.0" text="Cliente" />
                         <TableColumn fx:id="colCtaProyecto" prefWidth="120.0" text="Proyecto" />
+                        <TableColumn fx:id="colCtaVence" prefWidth="80.0" text="Vence" />
                         <TableColumn fx:id="colCtaTotal" prefWidth="90.0" text="Total" />
                         <TableColumn fx:id="colCtaPagado" prefWidth="90.0" text="Pagado" />
                         <TableColumn fx:id="colCtaSaldo" prefWidth="90.0" text="Saldo" />
@@ -73,7 +75,12 @@
                   </TableView>
                   <HBox alignment="CENTER_LEFT" spacing="8.0">
                      <children>
-                        <Label fx:id="lblPagosDe" maxWidth="1.7976931348623157E308" styleClass="seccion-titulo" text="PAGOS DE LA VENTA SELECCIONADA" HBox.hgrow="ALWAYS" />
+                        <VBox HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label fx:id="lblPagosDe" maxWidth="1.7976931348623157E308" styleClass="seccion-titulo" text="PAGOS DE LA VENTA SELECCIONADA" />
+                              <Label styleClass="texto-ayuda" text="Clic en el lápiz para corregir un pago" />
+                           </children>
+                        </VBox>
                         <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#eliminarPago" styleClass="boton-peligro, boton-compacto" text="Eliminar pago" />
                      </children>
                   </HBox>
@@ -93,8 +100,14 @@
             </VBox>
             <VBox minWidth="310.0" prefWidth="330.0" spacing="10.0" styleClass="tarjeta">
                <children>
-                  <Label styleClass="tarjeta-titulo" text="Registrar pago" />
-                  <Label styleClass="tarjeta-subtitulo" minHeight="-Infinity" text="El abono y el nuevo estado de la venta se guardan juntos" wrapText="true" />
+                  <HBox alignment="CENTER_LEFT" spacing="8.0">
+                     <children>
+                        <Label fx:id="lblModoPago" styleClass="tarjeta-titulo" text="Registrar pago" />
+                        <Region HBox.hgrow="ALWAYS" />
+                        <Label fx:id="lblChipPago" styleClass="chip-modo" text="Nuevo" />
+                     </children>
+                  </HBox>
+                  <Label fx:id="lblAyudaPago" styleClass="tarjeta-subtitulo" minHeight="-Infinity" text="El abono y el nuevo estado de la venta se guardan juntos" wrapText="true" />
                   <VBox spacing="5.0">
                      <children>
                         <Label styleClass="etiqueta-campo" text="Venta / factura *" />
@@ -147,6 +160,7 @@
                   </VBox>
                   <Region VBox.vgrow="ALWAYS" />
                   <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#liquidar" styleClass="boton-secundario" text="Poner el saldo completo" />
+                  <Button fx:id="btnNuevoPago" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#nuevoPago" styleClass="boton-secundario" text="Cancelar edición" />
                   <Button fx:id="btnRegistrarPago" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#registrarPago" styleClass="boton-exito" text="Registrar pago" />
                </children>
             </VBox>

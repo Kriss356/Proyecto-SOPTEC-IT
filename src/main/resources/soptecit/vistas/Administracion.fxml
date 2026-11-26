@@ -138,15 +138,15 @@
                               <HBox spacing="8.0">
                                  <children>
                                     <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiarEmpleado" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarEmpleado" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarEmpleado" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnGuardarEmpleado" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarEmpleado" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnActualizarEmpleado" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarEmpleado" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                               <HBox spacing="8.0">
                                  <children>
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarEmpleado" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarEmpleado" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoEmpleado" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnDesactivarEmpleado" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarEmpleado" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnReactivarEmpleado" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarEmpleado" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnEliminarEmpleado" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoEmpleado" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                            </children>
@@ -179,6 +179,7 @@
                                        </children>
                                     </VBox>
                                     <Region HBox.hgrow="ALWAYS" />
+                                    <TextField fx:id="txtBuscarExpediente" prefWidth="210.0" promptText="Buscar proyecto o cliente..." userData="tblExpedientes" />
                                     <Button mnemonicParsing="false" onAction="#cargarExpedientes" styleClass="boton-secundario, boton-compacto" text="Refrescar" />
                                  </children>
                               </HBox>
@@ -251,12 +252,17 @@
                      <children>
                         <VBox spacing="14.0" styleClass="tarjeta" HBox.hgrow="ALWAYS">
                            <children>
-                              <VBox>
+                              <HBox alignment="CENTER_LEFT" spacing="10.0">
                                  <children>
-                                    <Label styleClass="tarjeta-titulo" text="Proyectos para revisión final y cierre" />
-                                    <Label styleClass="tarjeta-subtitulo" text="Selecciona un proyecto y valida el checklist para marcarlo como Finalizado en MySQL" />
+                                    <VBox HBox.hgrow="ALWAYS">
+                                       <children>
+                                          <Label styleClass="tarjeta-titulo" text="Proyectos para revisión final y cierre" />
+                                          <Label styleClass="tarjeta-subtitulo" text="Selecciona un proyecto y valida el checklist para marcarlo como Finalizado en MySQL" wrapText="true" />
+                                       </children>
+                                    </VBox>
+                                    <TextField fx:id="txtBuscarRevision" prefWidth="200.0" promptText="Buscar proyecto o cliente..." userData="tblRevisionFinal" />
                                  </children>
-                              </VBox>
+                              </HBox>
                               <TableView fx:id="tblRevisionFinal" minHeight="240.0" VBox.vgrow="ALWAYS">
                                  <columns>
                                     <TableColumn fx:id="colRevId" prefWidth="65.0" text="ID" />

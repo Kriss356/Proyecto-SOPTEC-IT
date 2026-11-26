@@ -56,7 +56,8 @@
                   <TableColumn fx:id="colFecha" prefWidth="92.0" text="Fecha visita" />
                   <TableColumn fx:id="colProyecto" prefWidth="175.0" text="Proyecto / Cliente" />
                   <TableColumn fx:id="colCita" prefWidth="120.0" text="Cita" />
-                  <TableColumn fx:id="colObs" prefWidth="145.0" text="Observaciones" />
+                  <TableColumn fx:id="colObs" prefWidth="130.0" text="Observaciones" />
+                  <TableColumn fx:id="colDoc" prefWidth="60.0" text="Doc." />
                   <TableColumn fx:id="colActivo" prefWidth="82.0" styleClass="col-estado" text="Estado" />
                </columns>
                <columnResizePolicy>
@@ -75,19 +76,18 @@
                <children>
                   <HBox alignment="CENTER_LEFT" spacing="8.0">
                      <children>
-                        <VBox>
+                        <VBox minWidth="0.0" HBox.hgrow="ALWAYS">
                            <children>
                               <Label styleClass="tarjeta-titulo" text="Croquis del tendido de red" />
                               <Label fx:id="lblRutaCroquis" styleClass="tarjeta-subtitulo" text="Sin croquis seleccionado" wrapText="true" />
                            </children>
                         </VBox>
-                        <Region HBox.hgrow="ALWAYS" />
-                        <Button fx:id="btnCargarCroquis" mnemonicParsing="false" onAction="#cargarCroquis" styleClass="boton-secundario, boton-compacto" text="Cargar">
+                        <Button fx:id="btnCargarCroquis" minWidth="-Infinity" mnemonicParsing="false" onAction="#cargarCroquis" styleClass="boton-secundario, boton-compacto" text="Cargar">
                            <graphic>
                               <SVGPath content="M12 16 V4 M7 9 L12 4 L17 9 M4 16 V20 H20 V16" styleClass="icono-boton" />
                            </graphic>
                         </Button>
-                        <Button fx:id="btnQuitarCroquis" mnemonicParsing="false" onAction="#quitarCroquis" styleClass="boton-secundario, boton-compacto" text="Quitar" />
+                        <Button fx:id="btnQuitarCroquis" minWidth="-Infinity" mnemonicParsing="false" onAction="#quitarCroquis" styleClass="boton-secundario, boton-compacto" text="Quitar" />
                      </children>
                   </HBox>
                   <StackPane fx:id="panelCroquis" minHeight="180.0" styleClass="croquis-area" VBox.vgrow="ALWAYS">
@@ -100,7 +100,7 @@
                                  </VBox.margin>
                               </SVGPath>
                               <Label styleClass="item-titulo" text="Aún no se ha cargado el croquis" />
-                              <Label styleClass="texto-tenue" text="Se guardará automáticamente en uploads/croquis/" />
+                              <Label styleClass="texto-tenue" text="Se guardará automáticamente en Documentos › SOPTEC-IT › imágenes" />
                            </children>
                         </VBox>
                         <ImageView fx:id="imgCroquis" fitHeight="185.0" fitWidth="420.0" pickOnBounds="true" preserveRatio="true" />
@@ -134,6 +134,7 @@
                      <children>
                         <Label styleClass="etiqueta-campo" text="Proyecto asociado *" />
                         <ComboBox fx:id="cmbProyecto" maxWidth="1.7976931348623157E308" promptText="Seleccionar proyecto" />
+                        <Label fx:id="lblInfoProyectoLev" styleClass="texto-ayuda" text="Al elegir el proyecto se llenan solos el cliente y su cita más reciente." wrapText="true" />
                      </children>
                   </VBox>
 
@@ -147,22 +148,37 @@
                   <VBox spacing="4.0">
                      <children>
                         <Label styleClass="etiqueta-campo" text="Observaciones técnicas *" />
-                        <TextArea fx:id="txtObservacionesLev" prefRowCount="3" promptText="Nodos, metros estimados, canalización, ubicación del rack (IDF)..." wrapText="true" />
+                        <TextArea fx:id="txtObservacionesLev" minHeight="150.0" prefRowCount="7" promptText="Nodos, metros estimados, canalización, ubicación del rack (IDF)..." wrapText="true" VBox.vgrow="ALWAYS" />
+                     </children>
+                  </VBox>
+
+                  <VBox spacing="4.0">
+                     <children>
+                        <Label styleClass="etiqueta-campo" text="Documento del técnico (opcional)" />
+                        <HBox alignment="CENTER_LEFT" spacing="8.0" styleClass="item-lista">
+                           <children>
+                              <SVGPath content="M6 3 H14 L19 8 V21 H6 Z M14 3 V8 H19 M9 13 H16 M9 17 H14" styleClass="icono-tenue" />
+                              <Label fx:id="lblDocumentoLev" minWidth="0.0" maxWidth="1.7976931348623157E308" styleClass="texto-tenue" text="Sin documento (PDF, Word, Excel o foto de su ficha)" HBox.hgrow="ALWAYS" />
+                              <Button fx:id="btnCargarDocumento" minWidth="-Infinity" mnemonicParsing="false" onAction="#cargarDocumento" styleClass="boton-secundario, boton-compacto" text="Cargar" />
+                              <Button fx:id="btnAbrirDocumento" minWidth="-Infinity" mnemonicParsing="false" onAction="#abrirDocumento" styleClass="boton-primario, boton-compacto" text="Abrir" />
+                              <Button fx:id="btnQuitarDocumento" minWidth="-Infinity" mnemonicParsing="false" onAction="#quitarDocumento" styleClass="boton-secundario, boton-compacto" text="Quitar" />
+                           </children>
+                        </HBox>
                      </children>
                   </VBox>
 
                   <HBox spacing="8.0">
                      <children>
                         <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiar" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarLevantamiento" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarLevantamiento" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnGuardarLev" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarLevantamiento" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnActualizarLev" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarLevantamiento" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
                   <HBox spacing="8.0">
                      <children>
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarLevantamiento" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarLevantamiento" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoLevantamiento" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnDesactivarLev" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarLevantamiento" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnReactivarLev" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarLevantamiento" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnEliminarLev" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoLevantamiento" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
                </children>

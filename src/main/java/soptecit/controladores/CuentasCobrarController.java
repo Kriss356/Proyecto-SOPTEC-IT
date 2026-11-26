@@ -20,6 +20,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -27,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import soptecit.util.Edicion;
 import soptecit.util.Tablas;
 
 /**
@@ -50,6 +52,7 @@ public class CuentasCobrarController implements Initializable {
     @FXML private TableColumn<Venta, String> colCtaFolio;
     @FXML private TableColumn<Venta, String> colCtaCliente;
     @FXML private TableColumn<Venta, String> colCtaProyecto;
+    @FXML private TableColumn<Venta, String> colCtaVence;
     @FXML private TableColumn<Venta, String> colCtaTotal;
     @FXML private TableColumn<Venta, String> colCtaPagado;
     @FXML private TableColumn<Venta, String> colCtaSaldo;
@@ -68,6 +71,14 @@ public class CuentasCobrarController implements Initializable {
     @FXML private TextField txtMontoPago;
     @FXML private ComboBox<String> cmbMetodoPagoAdm;
     @FXML private TextField txtConceptoPago;
+    @FXML private Label lblModoPago;
+    @FXML private Label lblChipPago;
+    @FXML private Label lblAyudaPago;
+    @FXML private Button btnRegistrarPago;
+    @FXML private Button btnNuevoPago;
+
+    /** Pago cargado en el formulario para corregirlo; null cuando se registra uno nuevo. */
+    private Pago pagoEditando;
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -79,7 +90,16 @@ public class CuentasCobrarController implements Initializable {
         colCtaTotal.setCellValueFactory(d -> new SimpleStringProperty(MONEDA.format(d.getValue().getTotal())));
         colCtaPagado.setCellValueFactory(d -> new SimpleStringProperty(MONEDA.format(d.getValue().getPagado())));
         colCtaSaldo.setCellValueFactory(d -> new SimpleStringProperty(MONEDA.format(d.getValue().getSaldo())));
-        colCtaEstado.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEstado()));
+        colCtaVence.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getFechaVencimiento() != null ? d.getValue().getFechaVencimiento().format(FECHA) : "—"));
+        // Si ya pasó la fecha límite y todavía debe, se marca como "Vencida" (en rojo)
+        colCtaEstado.setCellValueFactory(d -> {
+            Venta v = d.getValue();
+            boolean vencida = v.getSaldo().signum() > 0 && v.getFechaVencimiento() != null
+                    && v.getFechaVencimiento().isBefore(LocalDate.now())
+                    && !Venta.CANCELADA.equalsIgnoreCase(v.getEstado());
+            return new SimpleStringProperty(vencida ? "Vencida" : v.getEstado());
+        });
         colCtaEstado.setCellFactory(c -> Tablas.crearCeldaEstado());
         tblCuentas.setPlaceholder(new Label("No hay ventas por cobrar"));
 
@@ -100,6 +120,9 @@ public class CuentasCobrarController implements Initializable {
             }
         });
         cmbVentaPago.valueProperty().addListener((o, a, v) -> mostrarVenta(v));
+        // Edición rápida de pagos: lápiz, doble clic o Enter
+        Edicion.habilitar(tblPagos, this::cargarPagoEnFormulario, pg -> eliminarPago(null));
+        modoPago(false);
         cargar(null);
     }
 
@@ -138,6 +161,7 @@ public class CuentasCobrarController implements Initializable {
             return;
         }
         lblSaldoVenta.setText(MONEDA.format(v.getSaldo()));
+        txtMontoPago.setPromptText("Saldo: " + MONEDA.format(v.getSaldo()));
         lblPagosDe.setText("PAGOS DE " + v.getFolio() + " · " + v.getClienteNombre());
         try {
             tblPagos.setItems(FXCollections.observableArrayList(ventaService.listarPagos(v.getIdVenta())));
@@ -158,6 +182,10 @@ public class CuentasCobrarController implements Initializable {
 
     @FXML
     private void registrarPago(ActionEvent event) {
+        if (pagoEditando != null) {
+            guardarCambiosPago();
+            return;
+        }
         String op = "REGISTRAR_ABONO";
         try {
             Venta v = cmbVentaPago.getValue();
@@ -177,9 +205,66 @@ public class CuentasCobrarController implements Initializable {
         }
     }
 
+    private void guardarCambiosPago() {
+        String op = "ACTUALIZAR_PAGO";
+        try {
+            BigDecimal monto = Validador.parsearDecimalNoNegativo(txtMontoPago.getText(), "Monto", MODULO, op);
+            Pago p = new Pago(monto, dpFechaPago.getValue(), cmbMetodoPagoAdm.getValue(), txtConceptoPago.getText());
+            p.setIdPago(pagoEditando.getIdPago());
+            Integer idVenta = pagoEditando.getIdVenta();
+            ventaService.actualizarPago(p);
+            AlertaUtil.info("Pago corregido", "El pago quedó en " + MONEDA.format(p.getMonto())
+                    + " y el saldo de la venta se recalculó.");
+            nuevoPago(null);
+            cargar(null);
+            if (idVenta != null) {
+                tblCuentas.getItems().stream().filter(x -> x.getIdVenta() == idVenta).findFirst()
+                        .ifPresent(x -> tblCuentas.getSelectionModel().select(x));
+            }
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MODULO, op, ex);
+        }
+    }
+
+    private void cargarPagoEnFormulario(Pago p) {
+        pagoEditando = p;
+        dpFechaPago.setValue(p.getFechaPago());
+        txtMontoPago.setText(p.getMonto() != null ? p.getMonto().toPlainString() : "");
+        cmbMetodoPagoAdm.setValue(p.getMetodoPago());
+        txtConceptoPago.setText(p.getConcepto());
+        modoPago(true);
+        txtMontoPago.requestFocus();
+    }
+
+    @FXML
+    private void nuevoPago(ActionEvent event) {
+        pagoEditando = null;
+        dpFechaPago.setValue(LocalDate.now());
+        txtMontoPago.clear();
+        cmbMetodoPagoAdm.setValue(null);
+        txtConceptoPago.clear();
+        tblPagos.getSelectionModel().clearSelection();
+        modoPago(false);
+    }
+
+    private void modoPago(boolean editando) {
+        lblModoPago.setText(editando ? "Corregir pago" : "Registrar pago");
+        lblChipPago.setText(editando ? "Editando" : "Nuevo");
+        lblChipPago.getStyleClass().remove("chip-modo-editando");
+        if (editando) {
+            lblChipPago.getStyleClass().add("chip-modo-editando");
+        }
+        lblAyudaPago.setText(editando
+                ? "Cambia monto, fecha, método o concepto; el saldo y el estado de la venta se recalculan solos"
+                : "El abono y el nuevo estado de la venta se guardan juntos");
+        btnRegistrarPago.setText(editando ? "Guardar cambios" : "Registrar pago");
+        Edicion.modo(editando, lblModoPago, null, null);
+        Edicion.mostrar(btnNuevoPago, editando);
+    }
+
     @FXML
     private void eliminarPago(ActionEvent event) {
-        Pago p = tblPagos.getSelectionModel().getSelectedItem();
+        Pago p = pagoEditando != null ? pagoEditando : tblPagos.getSelectionModel().getSelectedItem();
         if (p == null) {
             AlertaUtil.advertencia("Selecciona un pago", "Elige en la tabla de pagos el que deseas eliminar.");
             return;
@@ -192,6 +277,7 @@ public class CuentasCobrarController implements Initializable {
         try {
             ventaService.eliminarPago(p.getIdPago());
             AlertaUtil.info("Pago eliminado", "Se eliminó el pago y se recalculó el saldo de la venta.");
+            nuevoPago(null);
             cargar(null);
             Venta v = tblCuentas.getItems().stream().filter(x -> p.getIdVenta() != null && x.getIdVenta() == p.getIdVenta())
                     .findFirst().orElse(null);

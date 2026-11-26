@@ -20,7 +20,7 @@ public class LevantamientoDao {
     private static final String MODULO = "Levantamientos";
 
     private static final String SELECT_BASE =
-            "SELECT l.id_levantamiento, l.fecha_visita, l.croquis, l.observaciones_tecnicas, "
+            "SELECT l.id_levantamiento, l.fecha_visita, l.croquis, l.documento, l.observaciones_tecnicas, "
             + "l.activo, l.id_cita, l.id_proyecto, p.nombre_proyecto, c.nombre_cliente, "
             + "CONCAT_WS(' ', ci.fecha_cita, ci.hora_cita) AS fecha_hora_cita "
             + "FROM levantamiento l "
@@ -29,8 +29,9 @@ public class LevantamientoDao {
             + "LEFT JOIN cita ci ON ci.id_cita = l.id_cita ";
 
     public Levantamiento crear(Levantamiento l) throws SoptecException {
-        String sql = "INSERT INTO levantamiento (fecha_visita, croquis, observaciones_tecnicas, activo, id_cita, id_proyecto) "
-                + "VALUES (?, ?, ?, ?, ?, ?)";
+        MigracionBD.asegurarEsquema();
+        String sql = "INSERT INTO levantamiento (fecha_visita, croquis, observaciones_tecnicas, activo, id_cita, id_proyecto, "
+                + "documento) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection con = Conexion.conectarStrict(MODULO, "CREAR_LEVANTAMIENTO");
              PreparedStatement ps = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setDate(1, Date.valueOf(l.getFechaVisita()));
@@ -39,6 +40,7 @@ public class LevantamientoDao {
             ps.setBoolean(4, l.isActivo());
             DaoSupport.setNullableInt(ps, 5, l.getIdCita());
             ps.setInt(6, l.getIdProyecto());
+            DaoSupport.setNullableString(ps, 7, l.getDocumento());
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) {
@@ -54,6 +56,7 @@ public class LevantamientoDao {
     }
 
     public Levantamiento obtenerPorId(int idLevantamiento) throws SoptecException {
+        MigracionBD.asegurarEsquema();
         String sql = SELECT_BASE + "WHERE l.id_levantamiento = ?";
         try (Connection con = Conexion.conectarStrict(MODULO, "CONSULTAR_POR_ID");
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -68,6 +71,7 @@ public class LevantamientoDao {
     }
 
     public List<Levantamiento> listarTodos(boolean incluirInactivos) throws SoptecException {
+        MigracionBD.asegurarEsquema();
         String sql = SELECT_BASE
                 + (incluirInactivos ? "" : "WHERE l.activo = 1 ")
                 + "ORDER BY l.fecha_visita DESC, l.id_levantamiento DESC";
@@ -86,6 +90,7 @@ public class LevantamientoDao {
     }
 
     public List<Levantamiento> buscar(String criterio, boolean incluirInactivos) throws SoptecException {
+        MigracionBD.asegurarEsquema();
         String like = "%" + (criterio == null ? "" : criterio.trim()) + "%";
         String sql = SELECT_BASE
                 + "WHERE (p.nombre_proyecto LIKE ? OR c.nombre_cliente LIKE ? OR l.observaciones_tecnicas LIKE ?) "
@@ -110,8 +115,9 @@ public class LevantamientoDao {
     }
 
     public boolean actualizar(Levantamiento l) throws SoptecException {
+        MigracionBD.asegurarEsquema();
         String sql = "UPDATE levantamiento SET fecha_visita = ?, croquis = ?, observaciones_tecnicas = ?, "
-                + "activo = ?, id_cita = ?, id_proyecto = ? WHERE id_levantamiento = ?";
+                + "activo = ?, id_cita = ?, id_proyecto = ?, documento = ? WHERE id_levantamiento = ?";
         try (Connection con = Conexion.conectarStrict(MODULO, "ACTUALIZAR_LEVANTAMIENTO");
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(l.getFechaVisita()));
@@ -120,7 +126,8 @@ public class LevantamientoDao {
             ps.setBoolean(4, l.isActivo());
             DaoSupport.setNullableInt(ps, 5, l.getIdCita());
             ps.setInt(6, l.getIdProyecto());
-            ps.setInt(7, l.getIdLevantamiento());
+            DaoSupport.setNullableString(ps, 7, l.getDocumento());
+            ps.setInt(8, l.getIdLevantamiento());
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             throw DaoSupport.traducirYRegistrar(MODULO, "LevantamientoDao", "ACTUALIZAR_LEVANTAMIENTO",
@@ -158,7 +165,7 @@ public class LevantamientoDao {
         Date f = rs.getDate("fecha_visita");
         int citaRaw = rs.getInt("id_cita");
         Integer idCita = rs.wasNull() ? null : citaRaw;
-        return new Levantamiento(
+        Levantamiento l = new Levantamiento(
                 rs.getInt("id_levantamiento"),
                 f != null ? f.toLocalDate() : null,
                 rs.getString("croquis"),
@@ -170,5 +177,7 @@ public class LevantamientoDao {
                 rs.getString("nombre_cliente"),
                 rs.getString("fecha_hora_cita")
         );
+        l.setDocumento(rs.getString("documento"));
+        return l;
     }
 }

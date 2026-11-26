@@ -222,8 +222,8 @@
                   <HBox spacing="8.0">
                      <children>
                         <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiarVenta" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#registrarVenta" styleClass="boton-exito, boton-compacto" text="Registrar venta" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarVenta" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnRegistrarVenta" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#registrarVenta" styleClass="boton-exito, boton-compacto" text="Registrar venta" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnActualizarVenta" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarVenta" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
                </children>

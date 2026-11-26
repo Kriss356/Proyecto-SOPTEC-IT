@@ -277,6 +277,92 @@ public class VentaDao {
         }
     }
 
+    /**
+     * Corrige un pago ya registrado (monto, fecha, método y concepto). Verifica que el nuevo monto
+     * no supere el saldo de la venta y recalcula el estado; todo en UNA transacción.
+     */
+    public void actualizarPago(Pago pago) throws SoptecException {
+        MigracionBD.asegurarEsquema();
+        String op = "ACTUALIZAR_PAGO";
+        Connection con = null;
+        try {
+            con = Conexion.conectarStrict(MODULO, op);
+            con.setAutoCommit(false);
+            Integer idVenta;
+            try (PreparedStatement ps = con.prepareStatement("SELECT id_venta FROM pago WHERE id_pago = ? FOR UPDATE")) {
+                ps.setInt(1, pago.getIdPago());
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (!rs.next()) {
+                        throw new ValidacionException(MODULO, op, "El pago ya no existe. Refresca la pantalla.");
+                    }
+                    int v = rs.getInt(1);
+                    idVenta = rs.wasNull() ? null : v;
+                }
+            }
+            String estadoCuenta = "Abono";
+            if (idVenta != null) {
+                BigDecimal total;
+                String estado;
+                try (PreparedStatement ps = con.prepareStatement(
+                        "SELECT total, estado FROM venta WHERE id_venta = ? FOR UPDATE")) {
+                    ps.setInt(1, idVenta);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (!rs.next()) {
+                            throw new ValidacionException(MODULO, op, "La venta del pago ya no existe.");
+                        }
+                        total = rs.getBigDecimal(1);
+                        estado = rs.getString(2);
+                    }
+                }
+                if (Venta.CANCELADA.equalsIgnoreCase(estado)) {
+                    throw new ValidacionException(MODULO, op, "La venta está cancelada; sus pagos ya no se pueden modificar.");
+                }
+                BigDecimal otrosPagos = BigDecimal.ZERO;
+                try (PreparedStatement ps = con.prepareStatement(
+                        "SELECT IFNULL(SUM(monto), 0) FROM pago WHERE id_venta = ? AND id_pago <> ?")) {
+                    ps.setInt(1, idVenta);
+                    ps.setInt(2, pago.getIdPago());
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            otrosPagos = rs.getBigDecimal(1);
+                        }
+                    }
+                }
+                BigDecimal saldoDisponible = total.subtract(otrosPagos);
+                if (pago.getMonto().compareTo(saldoDisponible) > 0) {
+                    throw new ValidacionException(MODULO, op, "El pago ($" + pago.getMonto()
+                            + ") es mayor a lo que falta por pagar de la venta ($" + saldoDisponible + ").");
+                }
+                estadoCuenta = pago.getMonto().compareTo(saldoDisponible) == 0 ? "Liquidado" : "Abono";
+            }
+            try (PreparedStatement ps = con.prepareStatement("UPDATE pago SET monto = ?, fecha_pago = ?, metodo_pago = ?, "
+                    + "concepto = IFNULL(?, concepto), estado_cuenta = ? WHERE id_pago = ?")) {
+                ps.setBigDecimal(1, pago.getMonto());
+                ps.setDate(2, Date.valueOf(pago.getFechaPago()));
+                DaoSupport.setNullableString(ps, 3, pago.getMetodoPago());
+                DaoSupport.setNullableString(ps, 4, pago.getConcepto());
+                ps.setString(5, estadoCuenta);
+                ps.setInt(6, pago.getIdPago());
+                ps.executeUpdate();
+            }
+            if (idVenta != null) {
+                recalcularEstado(con, idVenta);
+            }
+            con.commit();
+            pago.setEstadoCuenta(estadoCuenta);
+            AppLogger.registrarInfo(MODULO, PROCESO, op, "Pago ID=" + pago.getIdPago() + " corregido a $" + pago.getMonto());
+        } catch (SQLException ex) {
+            Conexion.revertirSilencioso(con, MODULO, op);
+            throw DaoSupport.traducirYRegistrar(MODULO, PROCESO, op,
+                    "No se pudieron guardar los cambios del pago. Se revirtieron los cambios.", ex);
+        } catch (SoptecException ex) {
+            Conexion.revertirSilencioso(con, MODULO, op);
+            throw ex;
+        } finally {
+            Conexion.cerrarSilencioso(con);
+        }
+    }
+
     // =====================================================================
     // Consultas
     // =====================================================================

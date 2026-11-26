@@ -1,5 +1,6 @@
 package soptecit.controladores;
 
+import com.mycompany.soptec.it.servicio.CascadaService;
 import com.mycompany.soptec.it.modelo.Empleado;
 import com.mycompany.soptec.it.modelo.Proyecto;
 import com.mycompany.soptec.it.servicio.EmpleadoService;
@@ -18,6 +19,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -26,6 +28,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import soptecit.util.Edicion;
 import soptecit.util.Mensajes;
 import soptecit.util.Tablas;
 
@@ -40,9 +43,16 @@ public class AdministracionController implements Initializable {
     private static final NumberFormat MONEDA = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
 
     private final EmpleadoService empleadoService = new EmpleadoService();
+    private final CascadaService cascada = new CascadaService();
     private final ProyectoService proyectoService = new ProyectoService();
 
     // ---- 1. Empleados ----
+    // Botones del formulario de tblEmpleados (modo nuevo / editando)
+    @FXML private Button btnGuardarEmpleado;
+    @FXML private Button btnActualizarEmpleado;
+    @FXML private Button btnDesactivarEmpleado;
+    @FXML private Button btnReactivarEmpleado;
+    @FXML private Button btnEliminarEmpleado;
     @FXML private CheckBox chkInactivosEmp;
     @FXML private TextField txtBuscarEmp;
     @FXML private TextField txtConsultarIdEmp;
@@ -126,6 +136,9 @@ public class AdministracionController implements Initializable {
                 cargarEmpleadoEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblEmpleados, this::cargarEmpleadoEnFormulario);
+        Edicion.modo(false, lblModoEmpleado, btnGuardarEmpleado, btnActualizarEmpleado, btnDesactivarEmpleado, btnReactivarEmpleado, btnEliminarEmpleado);
     }
 
     @FXML
@@ -226,7 +239,27 @@ public class AdministracionController implements Initializable {
             AlertaUtil.advertencia("Selecciona un empleado", "Elige un empleado de la tabla.");
             return;
         }
+        String nombre = empleadoSeleccionado.getNombre();
         try {
+            int proyectos = cascada.proyectosDeEmpleado(empleadoSeleccionado.getIdEmpleado());
+            if (proyectos > 0) {
+                int r = AlertaUtil.elegir("Desactivar empleado", nombre + " está asignado a " + proyectos
+                        + (proyectos == 1 ? " proyecto activo" : " proyectos activos")
+                        + ".\n¿Quieres quitarlo también de esos proyectos?",
+                        "Desactivar y quitar de proyectos", "Solo desactivar", "Cancelar");
+                if (r < 0 || r == 2) {
+                    return;
+                }
+                if (r == 0) {
+                    // Respeta la regla del Administrador general único
+                    empleadoService.desactivar(empleadoSeleccionado.getIdEmpleado());
+                    cascada.desactivarEmpleadoYQuitarDeProyectos(empleadoSeleccionado.getIdEmpleado());
+                    AlertaUtil.info("Empleado desactivado", nombre + " quedó inactivo y se quitó de sus proyectos.");
+                    limpiarEmpleado(null);
+                    cargarTablaEmpleados(null);
+                    return;
+                }
+            }
             empleadoService.desactivar(empleadoSeleccionado.getIdEmpleado());
             AlertaUtil.info("Empleado desactivado", "El empleado quedó inactivo.");
             limpiarEmpleado(null);
@@ -283,6 +316,7 @@ public class AdministracionController implements Initializable {
         txtCorreoEmp.clear();
         quitarImagenEmpleado(null);
         tblEmpleados.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoEmpleado, btnGuardarEmpleado, btnActualizarEmpleado, btnDesactivarEmpleado, btnReactivarEmpleado, btnEliminarEmpleado);
     }
 
     private void cargarEmpleadoEnFormulario(Empleado e) {
@@ -300,6 +334,7 @@ public class AdministracionController implements Initializable {
         } else {
             quitarImagenEmpleado(null);
         }
+        Edicion.modo(true, lblModoEmpleado, btnGuardarEmpleado, btnActualizarEmpleado, btnDesactivarEmpleado, btnReactivarEmpleado, btnEliminarEmpleado);
     }
 
     private Empleado construirEmpleadoDesdeFormulario(Empleado base) {

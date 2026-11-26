@@ -142,8 +142,8 @@
                                     </VBox>
                                     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                                        <children>
-                                          <Label styleClass="etiqueta-campo" text="Entidad / Estado" />
-                                          <TextField fx:id="txtEstadoGeoCliente" promptText="Ej. Jalisco" />
+                                          <Label styleClass="etiqueta-campo" text="Estado (entidad)" />
+                                          <ComboBox fx:id="cmbEstadoGeoCliente" maxWidth="1.7976931348623157E308" promptText="Elige el estado" />
                                        </children>
                                     </VBox>
                                  </children>
@@ -394,15 +394,15 @@
                               <HBox spacing="8.0">
                                  <children>
                                     <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiarProyecto" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarProyecto" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarProyecto" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnGuardarProyecto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarProyecto" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnActualizarProyecto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarProyecto" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                               <HBox spacing="8.0">
                                  <children>
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarProyecto" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarProyecto" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
-                                    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoProyecto" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnDesactivarProyecto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarProyecto" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnReactivarProyecto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarProyecto" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
+                                    <Button fx:id="btnEliminarProyecto" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoProyecto" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
                                  </children>
                               </HBox>
                            </children>

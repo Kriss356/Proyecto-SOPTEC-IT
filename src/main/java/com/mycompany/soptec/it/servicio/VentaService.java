@@ -99,6 +99,20 @@ public class VentaService {
         }
     }
 
+    public void actualizarPago(Pago pago) throws SoptecException {
+        String op = "ACTUALIZAR_PAGO";
+        try {
+            if (pago == null || pago.getIdPago() <= 0) {
+                throw new ValidacionException(MODULO, op, "Selecciona el pago que quieres corregir.");
+            }
+            validarPago(pago, op);
+            dao.actualizarPago(pago);
+        } catch (ValidacionException | IntegridadReferencialException ex) {
+            AppLogger.registrarExcepcion(MODULO, PROCESO, op, ex);
+            throw ex;
+        }
+    }
+
     public void eliminarPago(int idPago) throws SoptecException {
         if (idPago <= 0) {
             throw registrar(new ValidacionException(MODULO, "ELIMINAR_PAGO", "Selecciona el pago que deseas eliminar."));

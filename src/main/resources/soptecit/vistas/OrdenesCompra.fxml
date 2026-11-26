@@ -28,7 +28,7 @@
                      </children>
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
-                  <TextField fx:id="txtBuscarOrden" onAction="#cargarOrdenes" prefWidth="210.0" promptText="Proveedor, proyecto o estado..." />
+                  <TextField fx:id="txtBuscarOrden" onAction="#cargarOrdenes" prefWidth="210.0" promptText="Buscar proveedor, proyecto o estado..." />
                   <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#cargarOrdenes" styleClass="boton-primario, boton-compacto" text="Buscar" />
                </children>
             </HBox>
@@ -121,8 +121,8 @@
                   <HBox spacing="8.0">
                      <children>
                         <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiarOrden" styleClass="boton-secundario, boton-compacto" text="Nueva" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#generarOrden" styleClass="boton-exito, boton-compacto" text="Generar orden" HBox.hgrow="ALWAYS" />
-                        <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarOrden" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnGenerarOrden" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#generarOrden" styleClass="boton-exito, boton-compacto" text="Generar orden" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="btnActualizarOrden" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarOrden" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
                </children>

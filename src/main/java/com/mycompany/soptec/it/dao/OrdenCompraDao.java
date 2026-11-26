@@ -143,6 +143,16 @@ public class OrdenCompraDao {
                 ps.setInt(1, idOrden);
                 ps.executeUpdate();
             }
+            // La recepción queda en el historial de movimientos del almacén (Entrada con folio OC-xxxx)
+            try (PreparedStatement ps = con.prepareStatement("INSERT INTO movimiento_almacen (fecha, tipo, id_material, "
+                    + "cantidad, id_proyecto, id_empleado, referencia, observaciones) "
+                    + "SELECT CURDATE(), 'Entrada', ocm.id_material, ocm.cantidad, NULL, NULL, "
+                    + "CONCAT('OC-', LPAD(?, 4, '0')), 'Recepción de orden de compra' "
+                    + "FROM orden_compra_material ocm WHERE ocm.id_orden_compra = ?")) {
+                ps.setInt(1, idOrden);
+                ps.setInt(2, idOrden);
+                ps.executeUpdate();
+            }
             cambiarEstado(con, idOrden, OrdenCompra.RECIBIDA);
             con.commit();
             AppLogger.registrarInfo(MODULO, PROCESO, op, "Orden ID=" + idOrden + " recibida; existencias actualizadas");

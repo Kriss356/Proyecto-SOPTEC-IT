@@ -101,6 +101,55 @@ public final class MigracionBD {
                 cambios += agregarLlave(con, st, "orden_compra", "fk_oc_proveedor",
                         "FOREIGN KEY (id_proveedor) REFERENCES proveedor(id_proveedor) ON DELETE RESTRICT ON UPDATE CASCADE");
 
+                // Historial de avances de Instalaciones (antes solo vivía en pantalla y se perdía al cerrar)
+                cambios += crearSiNoExiste(con, st, "avance_proyecto",
+                        "CREATE TABLE avance_proyecto ("
+                        + " id_avance INT(11) AUTO_INCREMENT PRIMARY KEY,"
+                        + " id_proyecto INT(11) NOT NULL, fecha DATE NOT NULL,"
+                        + " horas INT NOT NULL DEFAULT 0, tarea VARCHAR(100) NOT NULL,"
+                        + " id_empleado INT(11) NULL, porcentaje INT NOT NULL DEFAULT 0,"
+                        + " estado VARCHAR(30) NULL, material_usado VARCHAR(255) NULL,"
+                        + " observaciones TEXT NULL, evidencias TEXT NULL,"
+                        + " CONSTRAINT fk_avance_proyecto FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto)"
+                        + "   ON DELETE CASCADE ON UPDATE CASCADE,"
+                        + " CONSTRAINT fk_avance_empleado FOREIGN KEY (id_empleado) REFERENCES empleado(id_empleado)"
+                        + "   ON DELETE SET NULL ON UPDATE CASCADE"
+                        + ") ENGINE=InnoDB");
+
+                // Historial de movimientos del almacén (entradas por compra y salidas a proyectos)
+                cambios += crearSiNoExiste(con, st, "movimiento_almacen",
+                        "CREATE TABLE movimiento_almacen ("
+                        + " id_movimiento INT(11) AUTO_INCREMENT PRIMARY KEY,"
+                        + " fecha DATE NOT NULL, tipo VARCHAR(10) NOT NULL,"
+                        + " id_material INT(11) NOT NULL, cantidad INT NOT NULL,"
+                        + " id_proyecto INT(11) NULL, id_empleado INT(11) NULL,"
+                        + " referencia VARCHAR(100) NULL, observaciones TEXT NULL,"
+                        + " CONSTRAINT fk_mov_material FOREIGN KEY (id_material) REFERENCES material(id_material)"
+                        + "   ON DELETE CASCADE ON UPDATE CASCADE,"
+                        + " CONSTRAINT fk_mov_proyecto FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto)"
+                        + "   ON DELETE SET NULL ON UPDATE CASCADE,"
+                        + " CONSTRAINT fk_mov_empleado FOREIGN KEY (id_empleado) REFERENCES empleado(id_empleado)"
+                        + "   ON DELETE SET NULL ON UPDATE CASCADE"
+                        + ") ENGINE=InnoDB");
+
+                // Documento del técnico adjunto al levantamiento (PDF, Word, Excel o imagen)
+                cambios += agregarColumna(con, st, "levantamiento", "documento", "VARCHAR(500) NULL");
+
+                // Catálogo de material para instalaciones (una sola vez; no se aplica a la base de pruebas)
+                try {
+                    cambios += CatalogoMateriales.sembrar(con, st, url);
+                } catch (SQLException ex) {
+                    AppLogger.registrarExcepcion(MODULO, PROCESO, "SEMBRAR_CATALOGO", ex);
+                }
+
+                // Catálogo base de servicios: si la tabla está vacía, los combos de Citas y Ventas
+                // aparecen en blanco. Se agrega una sola vez y solo si no hay ningún servicio.
+                try {
+                    cambios += CatalogoServicios.sembrar(con, st, url);
+                } catch (SQLException ex) {
+                    AppLogger.registrarExcepcion(MODULO, PROCESO, "SEMBRAR_SERVICIOS", ex);
+                }
+
                 if (cambios > 0) {
                     AppLogger.registrarInfo(MODULO, PROCESO, "ACTUALIZAR_ESQUEMA",
                             "Esquema actualizado para servicios, ventas y pagos (" + cambios + " cambios).");

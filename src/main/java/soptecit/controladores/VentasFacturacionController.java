@@ -31,6 +31,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -41,6 +42,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.util.StringConverter;
+import soptecit.util.Edicion;
 import soptecit.util.EditorDetalle;
 import soptecit.util.Tablas;
 
@@ -63,6 +65,9 @@ public class VentasFacturacionController implements Initializable {
     private final ServicioService servicioService = new ServicioService();
 
     // Historial
+    // Botones del formulario de tblVentas (modo nuevo / editando)
+    @FXML private Button btnRegistrarVenta;
+    @FXML private Button btnActualizarVenta;
     @FXML private CheckBox chkCanceladas;
     @FXML private TextField txtBuscarVenta;
     @FXML private ComboBox<String> cmbFiltroEstadoVenta;
@@ -126,6 +131,9 @@ public class VentasFacturacionController implements Initializable {
                 cargarEnFormulario(v);
             }
         });
+        // Edición rápida: lápiz en cada fila
+        Edicion.agregarBotonEditar(tblVentas, this::cargarEnFormulario);
+        Edicion.modo(false, lblModoVenta, btnRegistrarVenta, btnActualizarVenta);
         tblVentas.setRowFactory(t -> {
             TableRow<Venta> fila = new TableRow<>();
             fila.setOnMouseClicked(e -> {
@@ -142,8 +150,13 @@ public class VentasFacturacionController implements Initializable {
                         DetalleServicio::getNombreServicio, DetalleServicio::getCantidad, DetalleServicio::setCantidad,
                         DetalleServicio::getPrecioUnitario, DetalleServicio::getImporte));
         editorServicios.setAlCambiar(this::actualizarTotales);
+        editorServicios.setTextoCatalogoVacio("No hay servicios en el catálogo. Agrégalos en Ventas › Catálogo de servicios.");
+        // Cada vez que se abre la lista se vuelve a leer el catálogo (así aparecen los servicios nuevos)
+        editorServicios.setFuenteCatalogo(() -> servicioService.listar(false));
 
         cmbClienteVenta.valueProperty().addListener((o, a, cli) -> alCambiarCliente(cli));
+        // Autorrelleno: al elegir la cita (venta nueva) se copian solos sus servicios
+        cmbCitaVenta.valueProperty().addListener((o, a, cita) -> autollenarServiciosDeCita(cita));
         configurarConvertidores();
         refrescarTodo(null);
     }
@@ -224,6 +237,33 @@ public class VentasFacturacionController implements Initializable {
         cmbCitaVenta.setItems(FXCollections.observableArrayList(citas));
         lblInfoClienteVenta.setText("RFC: " + (cli.getRfc() != null ? cli.getRfc() : "—")
                 + "  ·  " + (proyectos.size() - 1) + " proyecto(s)  ·  " + citas.size() + " cita(s)");
+        // Venta nueva: si el cliente solo tiene un proyecto o una cita, se eligen solos
+        if (ventaSeleccionada == null) {
+            if (proyectoActual == null && proyectos.size() == 2) {
+                cmbProyectoVenta.setValue(proyectos.get(1));
+            }
+            if (citas.size() == 1) {
+                cmbCitaVenta.setValue(citas.get(0));
+            }
+        }
+    }
+
+    /** En una venta nueva, al elegir la cita se copian sus servicios si aún no hay ninguno capturado. */
+    private void autollenarServiciosDeCita(Cita cita) {
+        if (cita == null || ventaSeleccionada != null || !editorServicios.getRenglones().isEmpty()) {
+            return;
+        }
+        try {
+            List<DetalleServicio> servicios = citaService.listarServicios(cita.getIdCita());
+            if (!servicios.isEmpty()) {
+                editorServicios.setRenglones(servicios);
+                idCitaOrigen = cita.getIdCita();
+                lblInfoClienteVenta.setText("Se copiaron " + servicios.size() + " servicio(s) de la cita #"
+                        + cita.getIdCita() + ". Puedes ajustar las cantidades.");
+            }
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MODULO, "CARGAR_SERVICIOS_CITA", ex);
+        }
     }
 
     // =====================================================================
@@ -386,6 +426,7 @@ public class VentasFacturacionController implements Initializable {
         lblPagoInicial.setText("Pago inicial (opcional)");
         txtObservacionesVenta.clear();
         tblVentas.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoVenta, btnRegistrarVenta, btnActualizarVenta);
     }
 
     private void cargarEnFormulario(Venta v) {
@@ -413,6 +454,7 @@ public class VentasFacturacionController implements Initializable {
         txtPagoInicial.setDisable(true);
         lblPagoInicial.setText("Pagado: " + MONEDA.format(v.getPagado()));
         txtObservacionesVenta.setText(v.getObservaciones() != null ? v.getObservaciones() : "");
+        Edicion.modo(true, lblModoVenta, btnRegistrarVenta, btnActualizarVenta);
     }
 
     private Venta construirDesdeFormulario(Venta base, String op) throws ValidacionException {

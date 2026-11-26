@@ -17,7 +17,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Time;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -169,13 +168,20 @@ public class PortalClienteDao {
 
     /** Guarda el domicilio del cliente (se usa al pedir una instalación). */
     public void actualizarDomicilio(int idCliente, String calle, String numero, String colonia) throws SoptecException {
-        String sql = "UPDATE cliente SET calle = ?, numero = ?, colonia = ? WHERE id_cliente = ?";
+        actualizarDomicilio(idCliente, calle, numero, colonia, null);
+    }
+
+    /** Guarda el domicilio y, si viene, el estado (entidad); si el estado es null se conserva el anterior. */
+    public void actualizarDomicilio(int idCliente, String calle, String numero, String colonia, String estado)
+            throws SoptecException {
+        String sql = "UPDATE cliente SET calle = ?, numero = ?, colonia = ?, estado = IFNULL(?, estado) WHERE id_cliente = ?";
         try (Connection con = Conexion.conectarStrict(MODULO, "ACTUALIZAR_DOMICILIO");
              PreparedStatement ps = con.prepareStatement(sql)) {
             DaoSupport.setNullableString(ps, 1, calle);
             DaoSupport.setNullableString(ps, 2, numero);
             DaoSupport.setNullableString(ps, 3, colonia);
-            ps.setInt(4, idCliente);
+            DaoSupport.setNullableString(ps, 4, estado);
+            ps.setInt(5, idCliente);
             ps.executeUpdate();
         } catch (SQLException ex) {
             throw DaoSupport.traducirYRegistrar(MODULO, PROCESO, "ACTUALIZAR_DOMICILIO",
@@ -580,9 +586,10 @@ public class PortalClienteDao {
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Timestamp f = rs.getTimestamp("fecha_pedido");
+                    // DATETIME se lee tal cual (sin convertir de UTC): así la hora coincide con la del reloj
+                    java.time.LocalDateTime f = rs.getObject("fecha_pedido", java.time.LocalDateTime.class);
                     lista.add(new PedidoCliente(rs.getInt("id_pedido"), rs.getInt("id_cliente"),
-                            rs.getString("nombre_cliente"), f != null ? f.toLocalDateTime() : null,
+                            rs.getString("nombre_cliente"), f,
                             rs.getString("estado"), rs.getBigDecimal("total"), rs.getString("resumen"),
                             rs.getInt("piezas")));
                 }

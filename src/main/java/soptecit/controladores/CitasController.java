@@ -1,5 +1,6 @@
 package soptecit.controladores;
 
+import com.mycompany.soptec.it.servicio.CascadaService;
 import com.mycompany.soptec.it.excepciones.ValidacionException;
 import com.mycompany.soptec.it.modelo.Cita;
 import com.mycompany.soptec.it.modelo.Cliente;
@@ -8,6 +9,8 @@ import com.mycompany.soptec.it.modelo.Servicio;
 import com.mycompany.soptec.it.servicio.ServicioService;
 import com.mycompany.soptec.it.servicio.CitaService;
 import com.mycompany.soptec.it.servicio.ClienteService;
+import com.mycompany.soptec.it.servicio.ClienteTelefonoService;
+import com.mycompany.soptec.it.modelo.ClienteTelefono;
 import com.mycompany.soptec.it.util.AlertaUtil;
 import com.mycompany.soptec.it.util.ComboBuscadorUtil;
 import com.mycompany.soptec.it.util.Validador;
@@ -21,6 +24,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -30,6 +34,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import soptecit.util.Edicion;
 import soptecit.util.EditorDetalle;
 import soptecit.util.Tablas;
 
@@ -40,8 +45,16 @@ public class CitasController implements Initializable {
 
     private static final String MODULO = "Citas";
     private final CitaService service = new CitaService();
+    private final CascadaService cascada = new CascadaService();
     private final ClienteService clienteService = new ClienteService();
+    private final ClienteTelefonoService telefonoService = new ClienteTelefonoService();
 
+    // Botones del formulario de tblCitas (modo nuevo / editando)
+    @FXML private Button btnGuardarCita;
+    @FXML private Button btnActualizarCita;
+    @FXML private Button btnDesactivarCita;
+    @FXML private Button btnReactivarCita;
+    @FXML private Button btnEliminarCita;
     @FXML private CheckBox chkInactivos;
     @FXML private TextField txtBuscarCita;
     @FXML private ComboBox<String> cmbFiltroEstado;
@@ -62,6 +75,11 @@ public class CitasController implements Initializable {
     @FXML private TextField txtFiltroCliente;
     @FXML private ComboBox<Cliente> cmbCliente;
     @FXML private Label lblInfoCliente;
+    @FXML private TextField txtCliTelefono;
+    @FXML private TextField txtCliRfc;
+    @FXML private TextField txtCliCorreo;
+    @FXML private TextField txtCliEstado;
+    @FXML private TextField txtCliDireccion;
     @FXML private DatePicker dpFechaCita;
     @FXML private ComboBox<String> cmbHora;
     @FXML private ComboBox<String> cmbEstadoCita;
@@ -106,27 +124,26 @@ public class CitasController implements Initializable {
 
         cmbFiltroEstado.valueProperty().addListener((obs, a, n) -> buscar(null));
 
-        cmbCliente.valueProperty().addListener((obs, a, cli) -> {
-            if (cli != null) {
-                String dir = cli.getDireccionResumen();
-                lblInfoCliente.setText("Correo: " + (cli.getCorreo() != null ? cli.getCorreo() : "—")
-                        + (dir.isBlank() ? "" : "  ·  " + dir));
-            } else {
-                lblInfoCliente.setText("Selecciona un cliente para ver su correo y dirección.");
-            }
-        });
+        // Al elegir el cliente, sus datos (teléfono, RFC, correo, estado y dirección) se llenan solos
+        cmbCliente.valueProperty().addListener((obs, a, cli) -> mostrarDatosCliente(cli));
 
         tblCitas.getSelectionModel().selectedItemProperty().addListener((obs, oldV, nuevo) -> {
             if (nuevo != null) {
                 cargarEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblCitas, this::cargarEnFormulario);
+        Edicion.modo(false, lblModoFormulario, btnGuardarCita, btnActualizarCita, btnDesactivarCita, btnReactivarCita, btnEliminarCita);
 
         editorServicios = new EditorDetalle<>(cmbServicioCita, spnCantidadServicio, tblServiciosCita,
                 lblTotalServiciosCita, "Total estimado: ", "Sin servicios: agrega al menos uno",
                 EditorDetalle.adaptador(DetalleServicio::de, Servicio::getIdServicio, DetalleServicio::getIdServicio,
                         DetalleServicio::getNombreServicio, DetalleServicio::getCantidad, DetalleServicio::setCantidad,
                         DetalleServicio::getPrecioUnitario, DetalleServicio::getImporte));
+        editorServicios.setTextoCatalogoVacio("No hay servicios en el catálogo. Agrégalos en Ventas › Catálogo de servicios.");
+        // Cada vez que se abre la lista se vuelve a leer el catálogo (así aparecen los servicios nuevos)
+        editorServicios.setFuenteCatalogo(() -> servicioService.listar(false));
 
         cargarComboClientes();
         cargarCatalogoServicios();
@@ -324,8 +341,18 @@ public class CitasController implements Initializable {
             return;
         }
         try {
-            service.reactivar(seleccionado.getIdCita());
-            AlertaUtil.info("Cita reactivada", "La cita volvió a estar activa.");
+            if (cascada.clienteInactivo(seleccionado.getIdCliente())) {
+                if (!AlertaUtil.confirmar("Reactivar cita", "El cliente de esta cita está inactivo.\n"
+                        + "Para reactivar la cita se reactivará también al cliente. ¿Continuar?")) {
+                    return;
+                }
+                cascada.reactivarCitaYCliente(seleccionado.getIdCita());
+                AlertaUtil.info("Cita reactivada", "La cita y su cliente volvieron a estar activos.");
+                cargarComboClientes();
+            } else {
+                service.reactivar(seleccionado.getIdCita());
+                AlertaUtil.info("Cita reactivada", "La cita volvió a estar activa.");
+            }
             limpiar(null);
             cargarTabla(null);
         } catch (Exception ex) {
@@ -371,6 +398,7 @@ public class CitasController implements Initializable {
         txtObservaciones.clear();
         editorServicios.limpiar();
         tblCitas.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoFormulario, btnGuardarCita, btnActualizarCita, btnDesactivarCita, btnReactivarCita, btnEliminarCita);
     }
 
     private void cargarEnFormulario(Cita c) {
@@ -393,6 +421,44 @@ public class CitasController implements Initializable {
             editorServicios.setRenglones(List.of());
             AlertaUtil.errorControlado(MODULO, "LISTAR_SERVICIOS_CITA", ex);
         }
+        Edicion.modo(true, lblModoFormulario, btnGuardarCita, btnActualizarCita, btnDesactivarCita, btnReactivarCita, btnEliminarCita);
+    }
+
+    /** Llena la ficha del cliente con sus datos guardados (solo lectura). */
+    private void mostrarDatosCliente(Cliente cli) {
+        TextField[] campos = {txtCliTelefono, txtCliRfc, txtCliCorreo, txtCliEstado, txtCliDireccion};
+        if (cli == null) {
+            for (TextField t : campos) {
+                t.clear();
+                t.getStyleClass().remove("campo-auto-lleno");
+            }
+            lblInfoCliente.setText("Al elegir el cliente, sus datos se llenan solos.");
+            return;
+        }
+        String telefono = "";
+        try {
+            List<ClienteTelefono> tels = telefonoService.listarPorCliente(cli.getIdCliente(), false);
+            telefono = tels.stream().map(ClienteTelefono::getTelefono).collect(Collectors.joining(", "));
+        } catch (Exception ex) {
+            // Sin teléfono no se detiene la captura de la cita
+        }
+        txtCliTelefono.setText(telefono.isEmpty() ? "Sin teléfono" : telefono);
+        txtCliRfc.setText(texto(cli.getRfc()));
+        txtCliCorreo.setText(texto(cli.getCorreo()));
+        txtCliEstado.setText(texto(cli.getEstado()));
+        String dir = cli.getDireccionResumen();
+        txtCliDireccion.setText(dir == null || dir.isBlank() ? "Sin dirección registrada" : dir);
+        for (TextField t : campos) {
+            t.positionCaret(0);
+            if (!t.getStyleClass().contains("campo-auto-lleno")) {
+                t.getStyleClass().add("campo-auto-lleno");
+            }
+        }
+        lblInfoCliente.setText("Datos de " + cli.getNombreCliente() + " (para cambiarlos ve a Ventas › Clientes).");
+    }
+
+    private static String texto(String valor) {
+        return valor == null || valor.isBlank() ? "—" : valor;
     }
 
     private Cita construirDesdeFormulario(Cita base, String op) throws Exception {

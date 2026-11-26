@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.TextField?>
 <?import java.lang.String?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
@@ -99,6 +100,7 @@
                      </children>
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="txtBuscarSolicitud" prefWidth="210.0" promptText="Buscar cliente, teléfono o servicio..." userData="tblCitas" />
                   <Button mnemonicParsing="false" onAction="#refrescar" text="Refrescar">
                      <styleClass>
                         <String fx:value="boton-secundario" />
@@ -159,6 +161,7 @@
                      </children>
                   </VBox>
                   <Region HBox.hgrow="ALWAYS" />
+                  <TextField fx:id="txtBuscarPedido" prefWidth="210.0" promptText="Buscar cliente o material..." userData="tblPedidos" />
                   <CheckBox fx:id="chkTodosPedidos" mnemonicParsing="false" onAction="#refrescar" text="Ver también entregados y cancelados" />
                </children>
             </HBox>

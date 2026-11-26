@@ -1,10 +1,16 @@
 package soptecit.controladores;
 
+import com.mycompany.soptec.it.servicio.CascadaService;
+import com.mycompany.soptec.it.util.GestorDocumentos;
+import javafx.stage.FileChooser;
+import java.io.File;
 import com.mycompany.soptec.it.excepciones.ValidacionException;
 import com.mycompany.soptec.it.modelo.Cita;
 import com.mycompany.soptec.it.modelo.Levantamiento;
 import com.mycompany.soptec.it.modelo.Proyecto;
 import com.mycompany.soptec.it.servicio.CitaService;
+import com.mycompany.soptec.it.servicio.ClienteService;
+import com.mycompany.soptec.it.modelo.Cliente;
 import com.mycompany.soptec.it.servicio.LevantamientoService;
 import com.mycompany.soptec.it.servicio.ProyectoService;
 import com.mycompany.soptec.it.util.AlertaUtil;
@@ -20,6 +26,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -32,6 +39,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import soptecit.util.Edicion;
 import soptecit.util.Tablas;
 
 /**
@@ -41,9 +49,17 @@ public class LevantamientosController implements Initializable {
 
     private static final String MODULO = "Levantamientos";
     private final LevantamientoService service = new LevantamientoService();
+    private final CascadaService cascada = new CascadaService();
     private final ProyectoService proyectoService = new ProyectoService();
     private final CitaService citaService = new CitaService();
+    private final ClienteService clienteService = new ClienteService();
 
+    // Botones del formulario de tblLevantamientos (modo nuevo / editando)
+    @FXML private Button btnGuardarLev;
+    @FXML private Button btnActualizarLev;
+    @FXML private Button btnDesactivarLev;
+    @FXML private Button btnReactivarLev;
+    @FXML private Button btnEliminarLev;
     @FXML private CheckBox chkInactivos;
     @FXML private TextField txtBuscar;
     @FXML private TextField txtConsultarId;
@@ -53,6 +69,13 @@ public class LevantamientosController implements Initializable {
     @FXML private TableColumn<Levantamiento, String> colProyecto;
     @FXML private TableColumn<Levantamiento, String> colCita;
     @FXML private TableColumn<Levantamiento, String> colObs;
+    @FXML private TableColumn<Levantamiento, String> colDoc;
+    @FXML private Label lblDocumentoLev;
+    @FXML private Button btnCargarDocumento;
+    @FXML private Button btnAbrirDocumento;
+    @FXML private Button btnQuitarDocumento;
+    /** Ruta (relativa a Documentos/SOPTEC-IT/documentos) del documento del técnico. */
+    private String rutaDocumentoActual;
     @FXML private TableColumn<Levantamiento, String> colActivo;
 
     @FXML private StackPane panelCroquis;
@@ -61,6 +84,7 @@ public class LevantamientosController implements Initializable {
     @FXML private Label lblRutaCroquis;
 
     @FXML private Label lblModoFormulario;
+    @FXML private Label lblInfoProyectoLev;
     @FXML private TextField txtFiltroProyecto;
     @FXML private ComboBox<Proyecto> cmbProyecto;
     @FXML private ComboBox<Cita> cmbCita;
@@ -87,6 +111,8 @@ public class LevantamientosController implements Initializable {
                         ? d.getValue().getFechaHoraCita() : "Sin cita"));
         colObs.setCellValueFactory(d -> new SimpleStringProperty(
                 d.getValue().getObservacionesTecnicas() != null ? d.getValue().getObservacionesTecnicas() : ""));
+        colDoc.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getDocumento() != null && !d.getValue().getDocumento().isBlank() ? "Sí" : "—"));
         colActivo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getActivoTexto()));
         colActivo.setCellFactory(c -> Tablas.crearCeldaEstado());
         tblLevantamientos.setPlaceholder(new Label("No hay levantamientos registrados"));
@@ -96,9 +122,94 @@ public class LevantamientosController implements Initializable {
                 cargarEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblLevantamientos, this::cargarEnFormulario);
+        Edicion.modo(false, lblModoFormulario, btnGuardarLev, btnActualizarLev, btnDesactivarLev, btnReactivarLev, btnEliminarLev);
+        mostrarDocumento(null);
+
+        // Autorrelleno: al elegir el proyecto se muestran los datos del cliente y se propone su cita más reciente;
+        // al elegir primero la cita se propone el proyecto de ese cliente.
+        cmbProyecto.valueProperty().addListener((o, a, p) -> alElegirProyecto(p));
+        cmbCita.valueProperty().addListener((o, a, c) -> alElegirCita(c));
 
         cargarCombos();
         cargarTabla(null);
+    }
+
+    private boolean autollenando;
+
+    private void alElegirProyecto(Proyecto p) {
+        if (p == null) {
+            lblInfoProyectoLev.setText("Al elegir el proyecto se llenan solos el cliente y su cita más reciente.");
+            return;
+        }
+        StringBuilder info = new StringBuilder("Cliente: ")
+                .append(p.getClienteNombre() != null ? p.getClienteNombre() : "—");
+        try {
+            Cliente cli = clienteService.consultarPorId(p.getIdCliente());
+            if (cli != null) {
+                try {
+                    List<com.mycompany.soptec.it.modelo.ClienteTelefono> tels =
+                            new com.mycompany.soptec.it.servicio.ClienteTelefonoService().listarPorCliente(cli.getIdCliente(), false);
+                    if (!tels.isEmpty()) {
+                        info.append("  ·  Tel. ").append(tels.get(0).getTelefono());
+                    }
+                } catch (Exception ex) {
+                    // el teléfono es solo informativo
+                }
+                String dir = cli.getDireccionResumen();
+                if (dir != null && !dir.isBlank()) {
+                    info.append("  ·  ").append(dir);
+                }
+                if (cli.getEstado() != null && !cli.getEstado().isBlank() && (dir == null || !dir.contains(cli.getEstado()))) {
+                    info.append(", ").append(cli.getEstado());
+                }
+            }
+        } catch (Exception ex) {
+            // Solo informativo
+        }
+        lblInfoProyectoLev.setText(info.toString());
+        if (autollenando || seleccionado != null || cmbCita.getValue() != null) {
+            return;
+        }
+        Cita reciente = null;
+        for (Cita c : cmbCita.getItems()) {
+            if (c != null && c.getIdCliente() == p.getIdCliente() && !"Cancelada".equalsIgnoreCase(c.getEstadoCita())
+                    && (reciente == null || (c.getFechaCita() != null && reciente.getFechaCita() != null
+                    && c.getFechaCita().isAfter(reciente.getFechaCita())))) {
+                reciente = c;
+            }
+        }
+        if (reciente != null) {
+            autollenando = true;
+            try {
+                cmbCita.setValue(reciente);
+            } finally {
+                autollenando = false;
+            }
+        }
+    }
+
+    private void alElegirCita(Cita c) {
+        if (c == null || autollenando || seleccionado != null || cmbProyecto.getValue() != null) {
+            return;
+        }
+        Proyecto unico = null;
+        int encontrados = 0;
+        for (Proyecto p : cmbProyecto.getItems()) {
+            if (p != null && p.getIdCliente() == c.getIdCliente()) {
+                unico = p;
+                encontrados++;
+            }
+        }
+        if (encontrados == 1) {
+            autollenando = true;
+            try {
+                cmbProyecto.setValue(unico);
+            } finally {
+                autollenando = false;
+            }
+        }
     }
 
     private void cargarCombos() {
@@ -238,8 +349,18 @@ public class LevantamientosController implements Initializable {
             return;
         }
         try {
-            service.reactivar(seleccionado.getIdLevantamiento());
-            AlertaUtil.info("Levantamiento reactivado", "El levantamiento volvió a estar activo.");
+            if (cascada.proyectoOClienteInactivo(seleccionado.getIdProyecto())) {
+                if (!AlertaUtil.confirmar("Reactivar levantamiento", "El proyecto de este levantamiento (o su cliente) "
+                        + "está inactivo.\nPara reactivarlo se reactivarán también el proyecto y su cliente. ¿Continuar?")) {
+                    return;
+                }
+                cascada.reactivarLevantamientoYProyecto(seleccionado.getIdLevantamiento());
+                AlertaUtil.info("Levantamiento reactivado", "El levantamiento, su proyecto y su cliente volvieron a estar activos.");
+                cargarCombos();
+            } else {
+                service.reactivar(seleccionado.getIdLevantamiento());
+                AlertaUtil.info("Levantamiento reactivado", "El levantamiento volvió a estar activo.");
+            }
             limpiar(null);
             cargarTabla(null);
         } catch (Exception ex) {
@@ -277,7 +398,9 @@ public class LevantamientosController implements Initializable {
         dpFechaVisita.setValue(LocalDate.now());
         txtObservacionesLev.clear();
         quitarCroquis(null);
+        mostrarDocumento(null);
         tblLevantamientos.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoFormulario, btnGuardarLev, btnActualizarLev, btnDesactivarLev, btnReactivarLev, btnEliminarLev);
     }
 
     private void cargarEnFormulario(Levantamiento l) {
@@ -297,6 +420,60 @@ public class LevantamientosController implements Initializable {
         } else {
             quitarCroquis(null);
         }
+        mostrarDocumento(l.getDocumento());
+        Edicion.modo(true, lblModoFormulario, btnGuardarLev, btnActualizarLev, btnDesactivarLev, btnReactivarLev, btnEliminarLev);
+    }
+
+    // =========================================================================
+    // DOCUMENTO DEL TÉCNICO (ficha en PDF, Word, Excel o foto)
+    // =========================================================================
+    @FXML
+    private void cargarDocumento(ActionEvent event) {
+        FileChooser selector = new FileChooser();
+        selector.setTitle("Elegir el documento del levantamiento");
+        selector.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Documentos (PDF, Word, Excel, imágenes)",
+                        "*.pdf", "*.doc", "*.docx", "*.xls", "*.xlsx", "*.txt", "*.png", "*.jpg", "*.jpeg"),
+                new FileChooser.ExtensionFilter("Solo PDF", "*.pdf"));
+        File archivo = selector.showOpenDialog(lblDocumentoLev.getScene().getWindow());
+        if (archivo == null) {
+            return;
+        }
+        try {
+            mostrarDocumento(GestorDocumentos.guardar(archivo, "levantamientos", MODULO));
+            if (seleccionado != null) {
+                lblDocumentoLev.setText(lblDocumentoLev.getText() + "  (presiona «Guardar cambios»)");
+            }
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MODULO, "CARGAR_DOCUMENTO", ex);
+        }
+    }
+
+    @FXML
+    private void abrirDocumento(ActionEvent event) {
+        java.nio.file.Path ruta = GestorDocumentos.resolver(rutaDocumentoActual);
+        if (ruta == null || !java.nio.file.Files.exists(ruta)) {
+            AlertaUtil.advertencia("Documento no disponible", "No se encontró el archivo en la carpeta de SOPTEC-IT. "
+                    + "Puede que se haya borrado; vuelve a cargarlo.");
+            return;
+        }
+        if (!com.mycompany.soptec.it.App.abrirArchivo(ruta)) {
+            AlertaUtil.info("Ubicación del documento", "Ábrelo desde:\n" + ruta);
+        }
+    }
+
+    @FXML
+    private void quitarDocumento(ActionEvent event) {
+        mostrarDocumento(null);
+    }
+
+    private void mostrarDocumento(String ruta) {
+        rutaDocumentoActual = ruta == null || ruta.isBlank() ? null : ruta;
+        boolean hay = rutaDocumentoActual != null;
+        lblDocumentoLev.setText(hay ? GestorDocumentos.nombreVisible(rutaDocumentoActual)
+                : "Sin documento (PDF, Word, Excel o foto de su ficha)");
+        btnAbrirDocumento.setDisable(!hay);
+        btnQuitarDocumento.setDisable(!hay);
     }
 
     private Levantamiento construirDesdeFormulario(Levantamiento base, String op) throws ValidacionException {
@@ -311,6 +488,7 @@ public class LevantamientosController implements Initializable {
         base.setFechaVisita(dpFechaVisita.getValue());
         base.setObservacionesTecnicas(txtObservacionesLev.getText());
         base.setCroquis(rutaCroquisActual);
+        base.setDocumento(rutaDocumentoActual);
         return base;
     }
 }

@@ -129,7 +129,49 @@
                   </HBox>
                </children>
             </VBox>
-            <Label fx:id="lblInfoCliente" styleClass="texto-tenue" text="Selecciona un cliente para ver su correo y dirección." wrapText="true" />
+            <Label fx:id="lblInfoCliente" styleClass="texto-ayuda" text="Al elegir el cliente, sus datos se llenan solos." wrapText="true" />
+            <VBox fx:id="panelDatosCliente" spacing="6.0">
+               <children>
+                  <HBox spacing="8.0">
+                     <children>
+                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Teléfono" />
+                              <TextField fx:id="txtCliTelefono" editable="false" focusTraversable="false" styleClass="campo-auto" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="3.0" prefWidth="130">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="RFC" />
+                              <TextField fx:id="txtCliRfc" editable="false" focusTraversable="false" styleClass="campo-auto" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <HBox spacing="8.0">
+                     <children>
+                        <VBox spacing="3.0" HBox.hgrow="ALWAYS">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Correo" />
+                              <TextField fx:id="txtCliCorreo" editable="false" focusTraversable="false" styleClass="campo-auto" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="3.0" prefWidth="130">
+                           <children>
+                              <Label styleClass="etiqueta-campo" text="Estado" />
+                              <TextField fx:id="txtCliEstado" editable="false" focusTraversable="false" styleClass="campo-auto" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <VBox spacing="3.0">
+                     <children>
+                        <Label styleClass="etiqueta-campo" text="Dirección" />
+                        <TextField fx:id="txtCliDireccion" editable="false" focusTraversable="false" styleClass="campo-auto" />
+                     </children>
+                  </VBox>
+               </children>
+            </VBox>
 
             <Separator styleClass="separador">
                <VBox.margin>
@@ -202,15 +244,15 @@
             <HBox spacing="8.0">
                <children>
                   <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#limpiar" styleClass="boton-secundario, boton-compacto" text="Nuevo" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarCita" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarCita" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnGuardarCita" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#guardarCita" styleClass="boton-exito, boton-compacto" text="Guardar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnActualizarCita" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#actualizarCita" styleClass="boton-primario, boton-compacto" text="Actualizar" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
             <HBox spacing="8.0">
                <children>
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarCita" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarCita" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
-                  <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoCita" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnDesactivarCita" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#desactivarCita" styleClass="boton-naranja, boton-compacto" text="Desactivar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnReactivarCita" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#reactivarCita" styleClass="boton-secundario, boton-compacto" text="Reactivar" HBox.hgrow="ALWAYS" />
+                  <Button fx:id="btnEliminarCita" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#eliminarFisicoCita" styleClass="boton-peligro, boton-compacto" text="Eliminar" HBox.hgrow="ALWAYS" />
                </children>
             </HBox>
          </children>

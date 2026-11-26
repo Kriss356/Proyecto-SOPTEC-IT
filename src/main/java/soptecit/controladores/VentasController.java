@@ -1,5 +1,7 @@
 package soptecit.controladores;
 
+import com.mycompany.soptec.it.dao.CascadaDao;
+import com.mycompany.soptec.it.servicio.CascadaService;
 import com.mycompany.soptec.it.excepciones.ValidacionException;
 import com.mycompany.soptec.it.modelo.Cliente;
 import com.mycompany.soptec.it.modelo.ClienteTelefono;
@@ -22,6 +24,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -30,6 +33,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import soptecit.util.Catalogos;
+import soptecit.util.Edicion;
 import soptecit.util.Tablas;
 
 /**
@@ -47,8 +52,15 @@ public class VentasController implements Initializable {
     private final ClienteService clienteService = new ClienteService();
     private final ClienteTelefonoService telefonoService = new ClienteTelefonoService();
     private final ProyectoService proyectoService = new ProyectoService();
+    private final CascadaService cascada = new CascadaService();
 
     // ==================== 1. CLIENTES ====================
+    // Botones del formulario de tblProyectos (modo nuevo / editando)
+    @FXML private Button btnGuardarProyecto;
+    @FXML private Button btnActualizarProyecto;
+    @FXML private Button btnDesactivarProyecto;
+    @FXML private Button btnReactivarProyecto;
+    @FXML private Button btnEliminarProyecto;
     @FXML private CheckBox chkInactivosCliente;
     @FXML private TextField txtBuscarCliente;
     @FXML private TextField txtConsultarIdCliente;
@@ -68,7 +80,7 @@ public class VentasController implements Initializable {
     @FXML private TextField txtCalleCliente;
     @FXML private TextField txtNumeroCliente;
     @FXML private TextField txtColoniaCliente;
-    @FXML private TextField txtEstadoGeoCliente;
+    @FXML private ComboBox<String> cmbEstadoGeoCliente;
     @FXML private ImageView imgCliente;
     @FXML private Label lblRutaImgCliente;
 
@@ -115,6 +127,7 @@ public class VentasController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        Catalogos.configurarEstados(cmbEstadoGeoCliente);
         inicializarClientes();
         inicializarTelefonos();
         inicializarProyectos();
@@ -252,13 +265,20 @@ public class VentasController implements Initializable {
             AlertaUtil.advertencia("Selecciona un cliente", "Elige un cliente de la tabla para desactivarlo.");
             return;
         }
-        if (!AlertaUtil.confirmar("Desactivar cliente",
-                "¿Deseas marcar como inactivo a " + clienteSeleccionado.getNombreCliente() + "?")) {
-            return;
-        }
+        String nombre = clienteSeleccionado.getNombreCliente();
         try {
-            clienteService.desactivar(clienteSeleccionado.getIdCliente());
-            AlertaUtil.info("Cliente desactivado", "El registro pasó a estado inactivo.");
+            // Desactivación en cascada: el cliente y lo que depende de él, en un solo paso y en esta misma pantalla
+            CascadaDao.Resumen activos = cascada.activosDeCliente(clienteSeleccionado.getIdCliente());
+            String mensaje = activos.total() == 0
+                    ? "¿Deseas marcar como inactivo a " + nombre + "?"
+                    : nombre + " tiene registros activos: " + activos.texto() + ".\n\n"
+                    + "Se desactivarán también, junto con el cliente. Si después lo reactivas, podrás reactivarlos de nuevo.";
+            if (!AlertaUtil.confirmar("Desactivar cliente", mensaje)) {
+                return;
+            }
+            cascada.desactivarCliente(clienteSeleccionado.getIdCliente(), activos.total() > 0);
+            AlertaUtil.info("Cliente desactivado", activos.total() == 0 ? nombre + " pasó a estado inactivo."
+                    : nombre + " y sus " + activos.texto() + " pasaron a estado inactivo.");
             limpiarCliente(null);
             refrescarTodo();
         } catch (Exception ex) {
@@ -272,9 +292,21 @@ public class VentasController implements Initializable {
             AlertaUtil.advertencia("Selecciona un cliente", "Marca 'Mostrar inactivos' y elige un cliente inactivo.");
             return;
         }
+        String nombre = clienteSeleccionado.getNombreCliente();
         try {
-            clienteService.reactivar(clienteSeleccionado.getIdCliente());
-            AlertaUtil.info("Cliente reactivado", "El cliente volvió a estar activo.");
+            CascadaDao.Resumen inactivos = cascada.inactivosDeCliente(clienteSeleccionado.getIdCliente());
+            boolean todo = false;
+            if (inactivos.total() > 0) {
+                int r = AlertaUtil.elegir("Reactivar cliente", nombre + " tiene registros inactivos: " + inactivos.texto()
+                        + ".\n¿Quieres reactivarlos también?", "Reactivar todo", "Solo el cliente", "Cancelar");
+                if (r < 0 || r == 2) {
+                    return;
+                }
+                todo = r == 0;
+            }
+            cascada.reactivarCliente(clienteSeleccionado.getIdCliente(), todo);
+            AlertaUtil.info("Cliente reactivado", todo ? nombre + " y sus " + inactivos.texto() + " volvieron a estar activos."
+                    : nombre + " volvió a estar activo.");
             limpiarCliente(null);
             refrescarTodo();
         } catch (Exception ex) {
@@ -313,7 +345,7 @@ public class VentasController implements Initializable {
         txtCalleCliente.clear();
         txtNumeroCliente.clear();
         txtColoniaCliente.clear();
-        txtEstadoGeoCliente.clear();
+        cmbEstadoGeoCliente.setValue(null);
         txtTelefonoInicial.clear();
         txtTelefonoInicial.setDisable(false);
         quitarImagenCliente(null);
@@ -329,7 +361,7 @@ public class VentasController implements Initializable {
         txtCalleCliente.setText(c.getCalle() == null ? "" : c.getCalle());
         txtNumeroCliente.setText(c.getNumero() == null ? "" : c.getNumero());
         txtColoniaCliente.setText(c.getColonia() == null ? "" : c.getColonia());
-        txtEstadoGeoCliente.setText(c.getEstado() == null ? "" : c.getEstado());
+        Catalogos.seleccionarEstado(cmbEstadoGeoCliente, c.getEstado());
         txtTelefonoInicial.clear();
         txtTelefonoInicial.setDisable(true);
         rutaImgCliente = c.getImagen();
@@ -348,7 +380,7 @@ public class VentasController implements Initializable {
         base.setCalle(txtCalleCliente.getText());
         base.setNumero(txtNumeroCliente.getText());
         base.setColonia(txtColoniaCliente.getText());
-        base.setEstado(txtEstadoGeoCliente.getText());
+        base.setEstado(cmbEstadoGeoCliente.getValue());
         base.setImagen(rutaImgCliente);
         return base;
     }
@@ -507,10 +539,19 @@ public class VentasController implements Initializable {
             return;
         }
         try {
-            telefonoService.reactivar(telefonoSeleccionado.getIdCliente(), telefonoSeleccionado.getTelefono());
-            AlertaUtil.info("Teléfono reactivado", "El teléfono volvió a estar activo.");
+            if (cascada.clienteInactivo(telefonoSeleccionado.getIdCliente())) {
+                if (!AlertaUtil.confirmar("Reactivar teléfono", "El cliente de este teléfono está inactivo.\n"
+                        + "Para reactivar el teléfono se reactivará también al cliente. ¿Continuar?")) {
+                    return;
+                }
+                cascada.reactivarTelefonoYCliente(telefonoSeleccionado.getIdCliente(), telefonoSeleccionado.getTelefono());
+                AlertaUtil.info("Teléfono reactivado", "El teléfono y su cliente volvieron a estar activos.");
+            } else {
+                telefonoService.reactivar(telefonoSeleccionado.getIdCliente(), telefonoSeleccionado.getTelefono());
+                AlertaUtil.info("Teléfono reactivado", "El teléfono volvió a estar activo.");
+            }
             limpiarTelefono(null);
-            cargarTablaTelefonos(null);
+            refrescarTodo();
         } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_TELEFONOS, "REACTIVAR_TELEFONO", ex);
         }
@@ -573,6 +614,9 @@ public class VentasController implements Initializable {
                 cargarProyectoEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblProyectos, this::cargarProyectoEnFormulario);
+        Edicion.modo(false, lblModoProyecto, btnGuardarProyecto, btnActualizarProyecto, btnDesactivarProyecto, btnReactivarProyecto, btnEliminarProyecto);
     }
 
     @FXML
@@ -657,11 +701,20 @@ public class VentasController implements Initializable {
             return;
         }
         try {
-            proyectoService.desactivar(proyectoSeleccionado.getIdProyecto());
-            AlertaUtil.info("Proyecto desactivado", "El proyecto quedó inactivo.");
+            CascadaDao.Resumen activos = cascada.activosDeProyecto(proyectoSeleccionado.getIdProyecto());
+            String nombre = proyectoSeleccionado.getNombreProyecto();
+            if (!AlertaUtil.confirmar("Desactivar proyecto", activos.total() == 0
+                    ? "¿Deseas marcar como inactivo el proyecto '" + nombre + "'?"
+                    : "El proyecto '" + nombre + "' tiene " + activos.texto() + " activos.\n"
+                    + "Se desactivarán también, junto con el proyecto.")) {
+                return;
+            }
+            cascada.desactivarProyecto(proyectoSeleccionado.getIdProyecto(), activos.total() > 0);
+            AlertaUtil.info("Proyecto desactivado", activos.total() == 0 ? "El proyecto quedó inactivo."
+                    : "El proyecto y sus " + activos.texto() + " quedaron inactivos.");
             limpiarProyecto(null);
             cargarTablaProyectos(null);
-            } catch (Exception ex) {
+        } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "DESACTIVAR_PROYECTO", ex);
         }
     }
@@ -672,12 +725,30 @@ public class VentasController implements Initializable {
             AlertaUtil.advertencia("Selecciona un proyecto", "Marca 'Mostrar inactivos' y elige un proyecto.");
             return;
         }
+        int id = proyectoSeleccionado.getIdProyecto();
         try {
-            proyectoService.reactivar(proyectoSeleccionado.getIdProyecto());
-            AlertaUtil.info("Proyecto reactivado", "El proyecto volvió a estar activo.");
+            boolean clienteInactivo = cascada.proyectoDeClienteInactivo(id);
+            if (clienteInactivo && !AlertaUtil.confirmar("Reactivar proyecto", "El cliente de este proyecto está inactivo.\n"
+                    + "Para reactivar el proyecto se reactivará también al cliente. ¿Continuar?")) {
+                return;
+            }
+            CascadaDao.Resumen inactivos = cascada.inactivosDeProyecto(id);
+            boolean conLevantamientos = false;
+            if (inactivos.total() > 0) {
+                int r = AlertaUtil.elegir("Reactivar proyecto", "El proyecto tiene " + inactivos.texto()
+                        + " inactivos. ¿Quieres reactivarlos también?", "Reactivar todo", "Solo el proyecto", "Cancelar");
+                if (r < 0 || r == 2) {
+                    return;
+                }
+                conLevantamientos = r == 0;
+            }
+            cascada.reactivarProyecto(id, conLevantamientos, clienteInactivo);
+            AlertaUtil.info("Proyecto reactivado", "El proyecto volvió a estar activo"
+                    + (conLevantamientos ? " junto con sus levantamientos" : "")
+                    + (clienteInactivo ? " y su cliente también se reactivó" : "") + ".");
             limpiarProyecto(null);
-            cargarTablaProyectos(null);
-            } catch (Exception ex) {
+            refrescarTodo();
+        } catch (Exception ex) {
             AlertaUtil.errorControlado(MOD_PROYECTOS, "REACTIVAR_PROYECTO", ex);
         }
     }
@@ -714,6 +785,7 @@ public class VentasController implements Initializable {
         cmbEstadoProy.setValue("Planeado");
         txtCostoProy.clear();
         tblProyectos.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoProyecto, btnGuardarProyecto, btnActualizarProyecto, btnDesactivarProyecto, btnReactivarProyecto, btnEliminarProyecto);
     }
 
     private void cargarProyectoEnFormulario(Proyecto p) {
@@ -726,6 +798,7 @@ public class VentasController implements Initializable {
         dpFinProy.setValue(p.getFechaEstimadaFin());
         cmbEstadoProy.setValue(p.getEstado());
         txtCostoProy.setText(p.getCostoTotal().toPlainString());
+        Edicion.modo(true, lblModoProyecto, btnGuardarProyecto, btnActualizarProyecto, btnDesactivarProyecto, btnReactivarProyecto, btnEliminarProyecto);
     }
 
     private Proyecto construirProyectoDesdeFormulario(Proyecto base, String op) throws Exception {

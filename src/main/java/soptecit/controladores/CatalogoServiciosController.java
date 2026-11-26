@@ -15,6 +15,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -22,6 +23,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import soptecit.util.Edicion;
 import soptecit.util.Tablas;
 
 /**
@@ -34,6 +36,12 @@ public class CatalogoServiciosController implements Initializable {
 
     private final ServicioService service = new ServicioService();
 
+    // Botones del formulario de tblServicios (modo nuevo / editando)
+    @FXML private Button btnGuardarServicio;
+    @FXML private Button btnActualizarServicio;
+    @FXML private Button btnDesactivarServicio;
+    @FXML private Button btnReactivarServicio;
+    @FXML private Button btnEliminarServicio;
     @FXML private CheckBox chkInactivosServ;
     @FXML private TextField txtBuscarServ;
     @FXML private TextField txtConsultarIdServ;
@@ -70,6 +78,9 @@ public class CatalogoServiciosController implements Initializable {
                 cargarEnFormulario(s);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblServicios, this::cargarEnFormulario);
+        Edicion.modo(false, lblModoServicio, btnGuardarServicio, btnActualizarServicio, btnDesactivarServicio, btnReactivarServicio, btnEliminarServicio);
         cargarServicios(null);
     }
 
@@ -213,6 +224,7 @@ public class CatalogoServiciosController implements Initializable {
         txtDescServ.clear();
         quitarImagen(null);
         tblServicios.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoServicio, btnGuardarServicio, btnActualizarServicio, btnDesactivarServicio, btnReactivarServicio, btnEliminarServicio);
     }
 
     private void cargarEnFormulario(Servicio s) {
@@ -229,6 +241,7 @@ public class CatalogoServiciosController implements Initializable {
         } else {
             quitarImagen(null);
         }
+        Edicion.modo(true, lblModoServicio, btnGuardarServicio, btnActualizarServicio, btnDesactivarServicio, btnReactivarServicio, btnEliminarServicio);
     }
 
     private Servicio construir(Servicio base, String op) throws Exception {

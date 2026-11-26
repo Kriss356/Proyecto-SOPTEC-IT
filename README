@@ -66,6 +66,21 @@ Práctica *CRUD con gestión de excepciones y tolerancia a fallos*. Detalle comp
 - **Compras-Almacén › Órdenes de compra** (en MySQL; al recibir suben las existencias), **Material por proveedor** y **Material por proyecto**.
 - Errores diferenciados (validación, conexión, integridad, archivos, BD), rollback registrado en el log y manejador global que evita cierres inesperados.
 
+## Correcciones para la demo en vivo (26/11/2026)
+Se recorrió el guion de la demo paso a paso en el sistema. Guion corregido en `demo/Guion_Demo_En_Vivo_SOPTEC_IT_v2.pdf`
+(fuente editable `.html`) e imagen de topología de ejemplo en `demo/Topologia_Red_Oficina_Corporativa.png`.
+
+- **Combo «Servicio del catálogo» en blanco** (Citas y Ventas): la tabla `servicio` estaba vacía. Ahora, si está vacía,
+  el sistema agrega una sola vez los 6 servicios base (`CatalogoServicios`, marcado en `soptec_config`; no toca `soptec_it_test`).
+  El combo avisa si no hay servicios y recarga el catálogo cada vez que se abre.
+- Los combos ya no se quedan en blanco (sin su texto guía) después de limpiar el formulario.
+- Los avisos con mensajes largos ya no se cortan con «...».
+- La hora de los pedidos del portal salía 6 h antes (zona horaria UTC); ahora se lee tal cual de MySQL.
+- El filtro de clientes no distingue acentos («sofia» encuentra a «Sofía») y si queda un solo resultado lo elige solo.
+- Levantamientos: los botones Cargar/Quitar ya no se aplastan con nombres de archivo largos.
+- Seguimiento: al buscar un proyecto, la lista de arriba cambia al proyecto encontrado.
+- `soptec_it_datos_prueba.sql` incluye una orden de compra «Solicitada» para mostrar *Registrar recepción*.
+
 ## Archivos que genera el sistema
 - Imágenes (clientes, empleados, proveedores, croquis, servicios): `Documentos\SOPTEC-IT\imagenes\` del usuario de Windows
   (la carpeta se crea sola).

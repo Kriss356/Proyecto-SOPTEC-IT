@@ -32,6 +32,7 @@
                   </Button>
                </children>
             </HBox>
+            <FlowPane fx:id="flowCategorias" hgap="8.0" vgap="8.0" />
             <Label fx:id="lblResultados" styleClass="portal-texto-tenue" text="0 productos disponibles" />
             <Label fx:id="lblSinProductos" managed="false" maxWidth="1.7976931348623157E308" styleClass="portal-aviso" text="No encontramos productos con ese nombre. Prueba con otra palabra o toca «Ver todo»." visible="false" wrapText="true" />
             <FlowPane fx:id="flowProductos" hgap="16.0" vgap="16.0" />

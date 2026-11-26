@@ -2,11 +2,12 @@ package soptecit.controladores;
 
 import com.mycompany.soptec.it.modelo.Empleado;
 import com.mycompany.soptec.it.modelo.Material;
-import com.mycompany.soptec.it.modelo.PartidaMaterial;
+import com.mycompany.soptec.it.modelo.MovimientoAlmacen;
 import com.mycompany.soptec.it.modelo.Proveedor;
 import com.mycompany.soptec.it.modelo.Proyecto;
 import com.mycompany.soptec.it.servicio.EmpleadoService;
 import com.mycompany.soptec.it.servicio.MaterialService;
+import com.mycompany.soptec.it.servicio.MovimientoAlmacenService;
 import com.mycompany.soptec.it.servicio.ProveedorService;
 import com.mycompany.soptec.it.servicio.ProyectoService;
 import com.mycompany.soptec.it.servicio.RelacionesService;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -25,6 +27,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -37,6 +40,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
+import soptecit.util.Edicion;
 import soptecit.util.Mensajes;
 import soptecit.util.Tablas;
 
@@ -48,6 +52,7 @@ public class ComprasAlmacenController implements Initializable {
 
     private static final String MOD_MAT = "Materiales";
     private static final String MOD_PROV = "Proveedores";
+    private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final NumberFormat MONEDA = NumberFormat.getCurrencyInstance(new Locale("es", "MX"));
 
     private final MaterialService materialService = new MaterialService();
@@ -56,6 +61,19 @@ public class ComprasAlmacenController implements Initializable {
     private final EmpleadoService empleadoService = new EmpleadoService();
 
     // KPIs
+    // Botones del formulario de tblMateriales (modo nuevo / editando)
+    // Botones del formulario de tblProveedores (modo nuevo / editando)
+    @FXML private Button btnGuardarProveedor;
+    @FXML private Button btnActualizarProveedor;
+    @FXML private Button btnDesactivarProveedor;
+    @FXML private Button btnReactivarProveedor;
+    @FXML private Button btnEliminarProveedor;
+    @FXML private Button btnGuardarMaterial;
+    @FXML private Button btnActualizarMaterial;
+    @FXML private Button btnDesactivarMaterial;
+    @FXML private Button btnReactivarMaterial;
+    @FXML private Button btnEliminarMaterial;
+    @FXML private Button btnPedirMaterial;
     @FXML private Label lblTotalMateriales;
     @FXML private Label lblBajoStockAlm;
     @FXML private Label lblTotalProveedores;
@@ -110,12 +128,28 @@ public class ComprasAlmacenController implements Initializable {
     @FXML private ComboBox<Proyecto> cmbProyectoMov;
     @FXML private ComboBox<Empleado> cmbResponsableMov;
     @FXML private TextArea txtObservacionesMov;
-    @FXML private TableView<String[]> tblMovimientos;
+    @FXML private TextField txtReferenciaMov;
+    @FXML private Label lblModoMovimiento;
+    @FXML private Label lblChipMovimiento;
+    @FXML private Label lblAyudaMovimiento;
+    @FXML private Button btnRegistrarMov;
+    @FXML private Button btnEliminarMov;
+    @FXML private DatePicker dpFiltroMov;
+    @FXML private TableView<MovimientoAlmacen> tblMovimientos;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovFecha;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovTipo;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovMaterial;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovCantidad;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovDestino;
+    @FXML private TableColumn<MovimientoAlmacen, String> colMovResponsable;
+
+    private final MovimientoAlmacenService movimientoService = new MovimientoAlmacenService();
+    /** Movimiento cargado en el formulario para corregirlo; null cuando se registra uno nuevo. */
+    private MovimientoAlmacen movimientoEditando;
 
     // 4. Órdenes de compra, material por proveedor y material por proyecto: controladores propios
     //    (OrdenesCompraController, MaterialProveedorController, MaterialProyectoController) con fx:include.
 
-    private final RelacionesService relacionesService = new RelacionesService();
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
@@ -129,6 +163,7 @@ public class ComprasAlmacenController implements Initializable {
         cargarTablaMateriales(null);
         cargarTablaProveedores(null);
         cargarCombosAuxiliares();
+        cargarMovimientos();
         actualizarKpis();
     }
 
@@ -173,6 +208,9 @@ public class ComprasAlmacenController implements Initializable {
                 cargarMaterialEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblMateriales, this::cargarMaterialEnFormulario);
+        Edicion.modo(false, lblModoMaterial, btnGuardarMaterial, btnActualizarMaterial, btnDesactivarMaterial, btnReactivarMaterial, btnEliminarMaterial, btnPedirMaterial);
     }
 
     @FXML
@@ -308,6 +346,7 @@ public class ComprasAlmacenController implements Initializable {
         txtPrecioMaterial.clear();
         txtExistenciasMaterial.clear();
         tblMateriales.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoMaterial, btnGuardarMaterial, btnActualizarMaterial, btnDesactivarMaterial, btnReactivarMaterial, btnEliminarMaterial, btnPedirMaterial);
     }
 
     private void cargarMaterialEnFormulario(Material m) {
@@ -316,6 +355,17 @@ public class ComprasAlmacenController implements Initializable {
         txtDescMaterial.setText(m.getDescripcionMaterial());
         txtPrecioMaterial.setText(m.getPrecioCosto().toPlainString());
         txtExistenciasMaterial.setText(String.valueOf(m.getExistencias()));
+        Edicion.modo(true, lblModoMaterial, btnGuardarMaterial, btnActualizarMaterial, btnDesactivarMaterial, btnReactivarMaterial, btnEliminarMaterial, btnPedirMaterial);
+    }
+
+    /** Abre una orden de compra ya llenada con este material, la cantidad sugerida y su proveedor. */
+    @FXML
+    private void pedirMaterial(ActionEvent event) {
+        if (materialSeleccionado == null) {
+            AlertaUtil.advertencia("Selecciona un material", "Elige en la tabla el material que quieres pedir.");
+            return;
+        }
+        PrincipalController.pedirMaterial(materialSeleccionado.getIdMaterial());
     }
 
     private Material construirMaterialDesdeFormulario(Material base, String op) throws Exception {
@@ -342,6 +392,9 @@ public class ComprasAlmacenController implements Initializable {
                 cargarProveedorEnFormulario(nuevo);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblProveedores, this::cargarProveedorEnFormulario);
+        Edicion.modo(false, lblModoProveedor, btnGuardarProveedor, btnActualizarProveedor, btnDesactivarProveedor, btnReactivarProveedor, btnEliminarProveedor);
     }
 
     @FXML
@@ -500,6 +553,7 @@ public class ComprasAlmacenController implements Initializable {
         txtCorreoProveedor.clear();
         quitarImagenProveedor(null);
         tblProveedores.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoProveedor, btnGuardarProveedor, btnActualizarProveedor, btnDesactivarProveedor, btnReactivarProveedor, btnEliminarProveedor);
     }
 
     private void cargarProveedorEnFormulario(Proveedor p) {
@@ -515,6 +569,7 @@ public class ComprasAlmacenController implements Initializable {
         } else {
             quitarImagenProveedor(null);
         }
+        Edicion.modo(true, lblModoProveedor, btnGuardarProveedor, btnActualizarProveedor, btnDesactivarProveedor, btnReactivarProveedor, btnEliminarProveedor);
     }
 
     private Proveedor construirProveedorDesdeFormulario(Proveedor base) {
@@ -529,12 +584,48 @@ public class ComprasAlmacenController implements Initializable {
     // 3 y 4. MOVIMIENTOS (ACTUALIZA STOCK EN MYSQL) Y ÓRDENES DE COMPRA
     // =========================================================================
     private void inicializarMovimientos() {
-        spnCantidadMov.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 10000, 1));
+        spnCantidadMov.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(1, 100000, 1));
         dpFechaMov.setValue(LocalDate.now());
 
-        rbSalida.selectedProperty().addListener((o, a, salida) -> cmbProyectoMov.setDisable(!salida));
+        // Autorrelleno: salida a un proyecto → se propone como responsable al primer empleado del proyecto
+        cmbProyectoMov.valueProperty().addListener((o, a, p) -> {
+            if (p != null && movimientoEditando == null && cmbResponsableMov.getValue() == null) {
+                try {
+                    List<Empleado> equipo = new RelacionesService().listarPersonal(p.getIdProyecto());
+                    if (!equipo.isEmpty()) {
+                        int id = equipo.get(0).getIdEmpleado();
+                        cmbResponsableMov.getItems().stream().filter(e -> e.getIdEmpleado() == id).findFirst()
+                                .ifPresent(cmbResponsableMov::setValue);
+                    }
+                } catch (Exception ex) {
+                    // El responsable se elige a mano
+                }
+            }
+        });
+        rbSalida.selectedProperty().addListener((o, a, salida) -> {
+            cmbProyectoMov.setDisable(!salida);
+            if (!salida) {
+                cmbProyectoMov.setValue(null);
+            }
+        });
 
-        Tablas.cargar(tblMovimientos, new String[][]{});
+        colMovFecha.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getFecha() != null ? d.getValue().getFecha().format(FECHA) : ""));
+        colMovTipo.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTipo()));
+        colMovTipo.setCellFactory(c -> Tablas.crearCeldaEstado());
+        colMovMaterial.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getMaterialDescripcion()));
+        colMovCantidad.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getCantidad())));
+        colMovDestino.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDestinoTexto()));
+        colMovResponsable.setCellValueFactory(d -> new SimpleStringProperty(
+                d.getValue().getEmpleadoNombre() != null ? d.getValue().getEmpleadoNombre() : "Almacén"));
+        tblMovimientos.setPlaceholder(new Label("No hay movimientos registrados"));
+        Edicion.habilitar(tblMovimientos, this::cargarMovimientoEnFormulario, mv -> {
+            cargarMovimientoEnFormulario(mv);
+            eliminarMovimiento(null);
+        });
+
+        dpFiltroMov.valueProperty().addListener((o, a, f) -> cargarMovimientos());
+        modoMovimiento(false);
     }
 
     private void cargarCombosAuxiliares() {
@@ -553,6 +644,24 @@ public class ComprasAlmacenController implements Initializable {
         }
     }
 
+    private void cargarMovimientos() {
+        try {
+            tblMovimientos.setItems(FXCollections.observableArrayList(movimientoService.listar(dpFiltroMov.getValue())));
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MOD_MAT, "LISTAR_MOVIMIENTOS", ex);
+        }
+    }
+
+    @FXML
+    private void verTodosMovimientos(ActionEvent event) {
+        if (dpFiltroMov.getValue() != null) {
+            dpFiltroMov.setValue(null); // el listener recarga la tabla
+        } else {
+            cargarMovimientos();
+        }
+    }
+
+    /** Guarda un movimiento nuevo o, si hay uno cargado, sus cambios (el almacén se corrige solo). */
     @FXML
     private void registrarMovimiento(ActionEvent event) {
         Material mat = cmbMaterialMov.getValue();
@@ -560,52 +669,115 @@ public class ComprasAlmacenController implements Initializable {
             Mensajes.error("Faltan datos", "Selecciona el material del movimiento.");
             return;
         }
-        int cantidad = spnCantidadMov.getValue();
         boolean esEntrada = rbEntrada.isSelected();
-        int nuevaExistencia = esEntrada ? mat.getExistencias() + cantidad : mat.getExistencias() - cantidad;
-        if (nuevaExistencia < 0) {
-            Mensajes.error("Stock insuficiente",
-                    "No hay existencias suficientes de '" + mat.getDescripcionMaterial()
-                    + "' (actual: " + mat.getExistencias() + ").");
+        MovimientoAlmacen mv = new MovimientoAlmacen();
+        mv.setIdMovimiento(movimientoEditando != null ? movimientoEditando.getIdMovimiento() : 0);
+        mv.setTipo(esEntrada ? MovimientoAlmacen.ENTRADA : MovimientoAlmacen.SALIDA);
+        mv.setIdMaterial(mat.getIdMaterial());
+        mv.setCantidad(spnCantidadMov.getValue() != null ? spnCantidadMov.getValue() : 0);
+        mv.setFecha(dpFechaMov.getValue() != null ? dpFechaMov.getValue() : LocalDate.now());
+        mv.setIdProyecto(!esEntrada && cmbProyectoMov.getValue() != null ? cmbProyectoMov.getValue().getIdProyecto() : null);
+        mv.setIdEmpleado(cmbResponsableMov.getValue() != null ? cmbResponsableMov.getValue().getIdEmpleado() : null);
+        mv.setReferencia(Validador.opcional(txtReferenciaMov.getText()));
+        mv.setObservaciones(Validador.opcional(txtObservacionesMov.getText()));
+        try {
+            if (movimientoEditando == null) {
+                movimientoService.registrar(mv);
+                Mensajes.info("Movimiento aplicado", mv.getTipo() + " de " + mv.getCantidad() + " × '"
+                        + mat.getDescripcionMaterial() + "' registrada. Las existencias ya se actualizaron.");
+            } else {
+                movimientoService.actualizar(mv);
+                Mensajes.info("Cambios guardados", "Se corrigió el movimiento y las existencias del almacén "
+                        + "se ajustaron con la diferencia.");
+            }
+            nuevoMovimiento(null);
+            refrescarTodo();
+        } catch (Exception ex) {
+            AlertaUtil.errorControlado(MOD_MAT, movimientoEditando == null ? "REGISTRAR_MOVIMIENTO" : "ACTUALIZAR_MOVIMIENTO", ex);
+        }
+    }
+
+    @FXML
+    private void eliminarMovimiento(ActionEvent event) {
+        MovimientoAlmacen mv = movimientoEditando != null ? movimientoEditando
+                : tblMovimientos.getSelectionModel().getSelectedItem();
+        if (mv == null) {
+            Mensajes.advertencia("Selecciona un movimiento", "Elige en el historial el movimiento que quieres eliminar.");
+            return;
+        }
+        String efecto = mv.isEntrada()
+                ? "Se restarán " + mv.getCantidad() + " unidades del almacén."
+                : "Se regresarán " + mv.getCantidad() + " unidades al almacén"
+                + (mv.getIdProyecto() != null ? " y se quitarán del material del proyecto." : ".");
+        if (!Mensajes.confirmar("Eliminar movimiento", "¿Eliminar la " + mv.getTipo().toLowerCase() + " de "
+                + mv.getCantidad() + " × '" + mv.getMaterialDescripcion() + "'?\n" + efecto)) {
             return;
         }
         try {
-            Proyecto proyectoDestino = cmbProyectoMov.getValue();
-            if (!esEntrada && proyectoDestino != null) {
-                // Salida a un proyecto: se suma al material del proyecto (proyecto_material) y se descuenta
-                // del almacén en UNA transacción (RelacionesService/ProyectoMaterialDao).
-                List<PartidaMaterial> actuales = relacionesService.listarMaterialDeProyecto(proyectoDestino.getIdProyecto());
-                boolean encontrado = false;
-                for (PartidaMaterial pm : actuales) {
-                    if (pm.getIdMaterial() == mat.getIdMaterial()) {
-                        pm.setCantidad(pm.getCantidad() + cantidad);
-                        encontrado = true;
-                    }
-                }
-                if (!encontrado) {
-                    actuales.add(PartidaMaterial.de(mat, cantidad));
-                }
-                relacionesService.guardarMaterialDeProyecto(proyectoDestino.getIdProyecto(), actuales);
-            } else {
-                mat.setExistencias(nuevaExistencia);
-                materialService.actualizar(mat);
-            }
-
-            String tipo = esEntrada ? "Entrada" : "Salida";
-            String ref = esEntrada ? "Recepción almacén"
-                    : (cmbProyectoMov.getValue() != null ? cmbProyectoMov.getValue().getNombreProyecto() : "Proyecto");
-            String resp = cmbResponsableMov.getValue() != null ? cmbResponsableMov.getValue().getNombre() : "Almacén";
-
-            tblMovimientos.getItems().add(0, new String[]{
-                dpFechaMov.getValue() != null ? dpFechaMov.getValue().toString() : LocalDate.now().toString(),
-                tipo, mat.getDescripcionMaterial(), String.valueOf(cantidad), ref, resp
-            });
-            Mensajes.info("Movimiento aplicado",
-                    "Existencia actualizada de '" + mat.getDescripcionMaterial() + "': " + nuevaExistencia + " unidades.");
-            txtObservacionesMov.clear();
+            movimientoService.eliminar(mv.getIdMovimiento());
+            Mensajes.info("Movimiento eliminado", "El movimiento se quitó y el almacén quedó como estaba antes de él.");
+            nuevoMovimiento(null);
             refrescarTodo();
         } catch (Exception ex) {
-            AlertaUtil.errorControlado(MOD_MAT, "REGISTRAR_MOVIMIENTO", ex);
+            AlertaUtil.errorControlado(MOD_MAT, "ELIMINAR_MOVIMIENTO", ex);
         }
+    }
+
+    @FXML
+    private void nuevoMovimiento(ActionEvent event) {
+        movimientoEditando = null;
+        rbEntrada.setSelected(true);
+        cmbMaterialMov.setValue(null);
+        spnCantidadMov.getValueFactory().setValue(1);
+        dpFechaMov.setValue(LocalDate.now());
+        cmbProyectoMov.setValue(null);
+        cmbResponsableMov.setValue(null);
+        txtReferenciaMov.clear();
+        txtObservacionesMov.clear();
+        tblMovimientos.getSelectionModel().clearSelection();
+        modoMovimiento(false);
+    }
+
+    private void cargarMovimientoEnFormulario(MovimientoAlmacen mv) {
+        movimientoEditando = mv;
+        if (mv.isEntrada()) {
+            rbEntrada.setSelected(true);
+        } else {
+            rbSalida.setSelected(true);
+        }
+        cmbMaterialMov.setValue(buscarPorId(cmbMaterialMov.getItems(), mv.getIdMaterial()));
+        spnCantidadMov.getValueFactory().setValue(mv.getCantidad());
+        dpFechaMov.setValue(mv.getFecha());
+        cmbProyectoMov.setValue(mv.getIdProyecto() == null ? null
+                : cmbProyectoMov.getItems().stream().filter(p -> p.getIdProyecto() == mv.getIdProyecto()).findFirst().orElse(null));
+        cmbResponsableMov.setValue(mv.getIdEmpleado() == null ? null
+                : cmbResponsableMov.getItems().stream().filter(e -> e.getIdEmpleado() == mv.getIdEmpleado()).findFirst().orElse(null));
+        txtReferenciaMov.setText(mv.getReferencia());
+        txtObservacionesMov.setText(mv.getObservaciones());
+        modoMovimiento(true);
+        cmbMaterialMov.requestFocus();
+    }
+
+    private static Material buscarPorId(List<Material> materiales, int idMaterial) {
+        for (Material m : materiales) {
+            if (m.getIdMaterial() == idMaterial) {
+                return m;
+            }
+        }
+        return null;
+    }
+
+    private void modoMovimiento(boolean editando) {
+        lblModoMovimiento.setText(editando ? "Corregir movimiento" : "Registrar movimiento");
+        lblChipMovimiento.setText(editando ? "Editando #" + movimientoEditando.getIdMovimiento() : "Nuevo");
+        lblChipMovimiento.getStyleClass().remove("chip-modo-editando");
+        if (editando) {
+            lblChipMovimiento.getStyleClass().add("chip-modo-editando");
+        }
+        lblAyudaMovimiento.setText(editando
+                ? "Al guardar, el almacén se corrige con la diferencia entre el movimiento original y el nuevo"
+                : "Las existencias del almacén se actualizan solas");
+        btnRegistrarMov.setText(editando ? "Guardar cambios" : "Aplicar movimiento");
+        Edicion.modo(editando, lblModoMovimiento, null, null, btnEliminarMov);
     }
 }

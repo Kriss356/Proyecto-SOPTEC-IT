@@ -28,6 +28,7 @@ import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -35,6 +36,7 @@ import javafx.scene.control.Spinner;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import soptecit.util.Edicion;
 import soptecit.util.EditorDetalle;
 import soptecit.util.Tablas;
 
@@ -53,6 +55,9 @@ public class OrdenesCompraController implements Initializable {
     private final MaterialService materialService = new MaterialService();
     private final RelacionesService relaciones = new RelacionesService();
 
+    // Botones del formulario de tblOrdenes (modo nuevo / editando)
+    @FXML private Button btnGenerarOrden;
+    @FXML private Button btnActualizarOrden;
     @FXML private TextField txtBuscarOrden;
     @FXML private TableView<OrdenCompra> tblOrdenes;
     @FXML private TableColumn<OrdenCompra, String> colOrdFolio;
@@ -79,6 +84,15 @@ public class OrdenesCompraController implements Initializable {
     private List<Material> materiales = new ArrayList<>();
     private OrdenCompra seleccionada;
 
+    /** Existencias a las que se quiere llegar al pedir material con bajo stock. */
+    public static final int STOCK_OBJETIVO = 20;
+    /** Material que se pidió "pedir" desde otra pantalla (Inicio o Material); se usa al abrir esta pestaña. */
+    private static Integer materialPorPedir;
+
+    public static void prepararPedido(int idMaterial) {
+        materialPorPedir = idMaterial;
+    }
+
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         dpFechaOrden.setValue(LocalDate.now());
@@ -101,6 +115,9 @@ public class OrdenesCompraController implements Initializable {
                 cargarEnFormulario(oc);
             }
         });
+        // Edición rápida: lápiz en cada fila, doble clic o Enter
+        Edicion.habilitar(tblOrdenes, this::cargarEnFormulario);
+        Edicion.modo(false, lblModoOrden, btnGenerarOrden, btnActualizarOrden);
 
         editorPartidas = new EditorDetalle<>(cmbMaterialOrden, spnCantidadOrden, tblPartidas, lblTotalOrden,
                 "Total: ", "Agrega el material a comprar",
@@ -110,6 +127,39 @@ public class OrdenesCompraController implements Initializable {
         cmbProveedorOrden.valueProperty().addListener((o, a, p) -> ordenarMaterialPorProveedor(p));
         cargarCatalogos();
         cargarOrdenes(null);
+        if (materialPorPedir != null) {
+            int id = materialPorPedir;
+            materialPorPedir = null;
+            llenarPedidoRapido(id);
+        }
+    }
+
+    /** Orden nueva con el material, la cantidad para llegar a 20 piezas y el proveedor que lo surte. */
+    private void llenarPedidoRapido(int idMaterial) {
+        Material m = materiales.stream().filter(x -> x.getIdMaterial() == idMaterial).findFirst().orElse(null);
+        if (m == null) {
+            return;
+        }
+        int cantidad = Math.max(STOCK_OBJETIVO - m.getExistencias(), 5);
+        try {
+            List<Proveedor> surten = relaciones.listarProveedoresDeMaterial(idMaterial);
+            for (Proveedor pr : surten) {
+                Proveedor enCombo = cmbProveedorOrden.getItems().stream()
+                        .filter(x -> x.getIdProveedor() == pr.getIdProveedor()).findFirst().orElse(null);
+                if (enCombo != null) {
+                    cmbProveedorOrden.setValue(enCombo);
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            // el proveedor se elige a mano
+        }
+        List<PartidaMaterial> partidas = new ArrayList<>();
+        partidas.add(PartidaMaterial.de(m, cantidad));
+        editorPartidas.setRenglones(partidas);
+        lblModoOrden.setText("Pedido rápido: " + m.getDescripcionMaterial());
+        lblAyudaProveedor.setText("Hay " + m.getExistencias() + " en almacén; se sugieren " + cantidad
+                + " para llegar a " + STOCK_OBJETIVO + ". Revisa el proveedor y presiona «Generar orden».");
     }
 
     private void cargarCatalogos() {
@@ -279,6 +329,7 @@ public class OrdenesCompraController implements Initializable {
         dpEntregaOrden.setValue(LocalDate.now().plusDays(5));
         editorPartidas.limpiar();
         tblOrdenes.getSelectionModel().clearSelection();
+        Edicion.modo(false, lblModoOrden, btnGenerarOrden, btnActualizarOrden);
     }
 
     private void cargarEnFormulario(OrdenCompra o) {
@@ -298,6 +349,7 @@ public class OrdenesCompraController implements Initializable {
             dpEntregaOrden.setValue(null);
         }
         editorPartidas.setRenglones(o.getPartidas());
+        Edicion.modo(true, lblModoOrden, btnGenerarOrden, btnActualizarOrden);
     }
 
     private OrdenCompra construir(OrdenCompra base, String op) throws ValidacionException {

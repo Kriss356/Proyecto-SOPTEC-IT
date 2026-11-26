@@ -10,8 +10,11 @@ import java.util.function.ToIntFunction;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ComboBoxBase;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TableColumn;
@@ -50,6 +53,13 @@ public class EditorDetalle<C, D> {
     private final Adaptador<C, D> adaptador;
     private final ObservableList<D> renglones = FXCollections.observableArrayList();
     private Runnable alCambiar = () -> { };
+    private final Label avisoCatalogoVacio = new Label("No hay elementos en el catálogo.");
+
+    /** De dónde se vuelve a leer el catálogo cada vez que se abre la lista desplegable. */
+    @FunctionalInterface
+    public interface FuenteCatalogo<C> {
+        List<C> leer() throws Exception;
+    }
 
     @SuppressWarnings("unchecked")
     public EditorDetalle(ComboBox<C> combo, Spinner<Integer> cantidad, TableView<D> tabla, Label lblTotal,
@@ -65,6 +75,24 @@ public class EditorDetalle<C, D> {
         cantidad.setEditable(true);
         tabla.setItems(renglones);
         tabla.setPlaceholder(new Label(textoVacio));
+        // Si el catálogo está vacío, la lista desplegable muestra un aviso en lugar de quedar en blanco
+        avisoCatalogoVacio.setWrapText(true);
+        avisoCatalogoVacio.setMaxWidth(320);
+        avisoCatalogoVacio.setStyle("-fx-padding: 10 12; -fx-text-fill: #b45309;");
+        combo.setPlaceholder(avisoCatalogoVacio);
+        // JavaFX deja el combo en blanco (sin «Servicio del catálogo») después de limpiarlo;
+        // esta celda vuelve a mostrar el texto guía cuando no hay nada elegido.
+        combo.setButtonCell(new ListCell<C>() {
+            @Override
+            protected void updateItem(C item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(combo.getPromptText());
+                } else {
+                    setText(combo.getConverter() != null ? combo.getConverter().toString(item) : String.valueOf(item));
+                }
+            }
+        });
 
         List<TableColumn<D, ?>> cols = tabla.getColumns();
         if (cols.size() >= 1) {
@@ -104,10 +132,46 @@ public class EditorDetalle<C, D> {
 
     public void setCatalogo(List<C> elementos) {
         C actual = combo.getValue();
-        combo.setItems(FXCollections.observableArrayList(elementos));
-        if (actual != null && elementos.contains(actual)) {
-            combo.setValue(actual);
+        List<C> lista = elementos == null ? List.of() : elementos;
+        combo.setItems(FXCollections.observableArrayList(lista));
+        if (actual != null) {
+            // Se conserva lo elegido aunque el catálogo se haya vuelto a leer (se compara por ID)
+            int idActual = adaptador.idDeCatalogo(actual);
+            C igual = null;
+            for (C e : lista) {
+                if (adaptador.idDeCatalogo(e) == idActual) {
+                    igual = e;
+                    break;
+                }
+            }
+            combo.setValue(igual);
         }
+    }
+
+    /** Texto que aparece dentro de la lista desplegable cuando el catálogo no tiene elementos. */
+    public void setTextoCatalogoVacio(String texto) {
+        avisoCatalogoVacio.setText(texto);
+    }
+
+    /**
+     * Vuelve a leer el catálogo cada vez que se abre la lista desplegable, para que lo agregado
+     * en otra pantalla (por ejemplo, Ventas › Catálogo de servicios) aparezca sin reiniciar.
+     * No interrumpe la búsqueda al teclear ({@link Autocompletar}).
+     */
+    public void setFuenteCatalogo(FuenteCatalogo<C> fuente) {
+        if (fuente == null) {
+            return;
+        }
+        combo.addEventHandler(ComboBoxBase.ON_SHOWING, e -> {
+            if (combo.getItems() instanceof FilteredList) {
+                return; // el usuario está buscando: no se reemplaza la lista filtrada
+            }
+            try {
+                setCatalogo(fuente.leer());
+            } catch (Exception ex) {
+                // Si falla la lectura se conserva la lista que ya estaba
+            }
+        });
     }
 
     public void setAlCambiar(Runnable r) {

@@ -104,7 +104,8 @@ public class InicioController implements Initializable {
             long bajoStock = materiales.stream().filter(m -> m.getExistencias() <= 10).count();
             lblBajoStock.setText(String.valueOf(bajoStock));
 
-            // Tabla de proyectos
+            // Tabla de proyectos (avance real capturado en Instalaciones; si no hay, se estima por estado)
+            java.util.Map<Integer, Integer> avances = avanceReal();
             String[][] filas = new String[proyectos.size()][6];
             for (int i = 0; i < proyectos.size(); i++) {
                 Proyecto p = proyectos.get(i);
@@ -113,7 +114,7 @@ public class InicioController implements Initializable {
                     p.getClienteNombre() != null ? p.getClienteNombre() : "Sin cliente",
                     p.getNombreProyecto(),
                     MONEDA.format(p.getCostoTotal() != null ? p.getCostoTotal() : BigDecimal.ZERO),
-                    String.valueOf(porcentajePorEstado(p.getEstado())),
+                    String.valueOf(avances.getOrDefault(p.getIdProyecto(), porcentajePorEstado(p.getEstado()))),
                     p.getEstado() != null ? p.getEstado() : "Planeado"
                 };
             }
@@ -170,7 +171,10 @@ public class InicioController implements Initializable {
     private void poblarAlertasMaterial(List<Material> materiales) {
         listaAlertas.getChildren().clear();
         int mostrados = 0;
-        for (Material m : materiales) {
+        // Primero los agotados y los que tienen menos existencias
+        List<Material> ordenados = new java.util.ArrayList<>(materiales);
+        ordenados.sort(java.util.Comparator.comparingInt(Material::getExistencias));
+        for (Material m : ordenados) {
             if (m.getExistencias() <= 10 && mostrados < 4) {
                 HBox item = new HBox(10);
                 item.setAlignment(Pos.CENTER_LEFT);
@@ -189,6 +193,14 @@ public class InicioController implements Initializable {
                 badge.getStyleClass().addAll("badge", agotado ? "badge-peligro" : "badge-alerta");
 
                 item.getChildren().addAll(textos, badge);
+                if (PrincipalController.puedeVer("ComprasAlmacen")) {
+                    javafx.scene.control.Button pedir = new javafx.scene.control.Button("Pedir");
+                    pedir.getStyleClass().addAll("boton-primario", "boton-compacto");
+                    pedir.setTooltip(new javafx.scene.control.Tooltip("Abre una orden de compra ya llenada con este material"));
+                    int idMaterial = m.getIdMaterial();
+                    pedir.setOnAction(e -> PrincipalController.pedirMaterial(idMaterial));
+                    item.getChildren().add(pedir);
+                }
                 listaAlertas.getChildren().add(item);
                 mostrados++;
             }
@@ -204,6 +216,15 @@ public class InicioController implements Initializable {
         lbl.getStyleClass().add("texto-tenue");
         lbl.setWrapText(true);
         contenedor.getChildren().add(lbl);
+    }
+
+    /** Último porcentaje de avance capturado por proyecto (vacío si aún no hay avances o falla la consulta). */
+    public static java.util.Map<Integer, Integer> avanceReal() {
+        try {
+            return new com.mycompany.soptec.it.servicio.AvanceProyectoService().ultimoPorcentajePorProyecto();
+        } catch (Exception ex) {
+            return new java.util.HashMap<>();
+        }
     }
 
     public static int porcentajePorEstado(String estado) {

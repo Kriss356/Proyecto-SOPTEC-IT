@@ -86,8 +86,9 @@
                </graphic>
             </ToggleButton>
 
-            <Label styleClass="sidebar-seccion" text="SOPORTE Y AUDITORÍA" />
-            <ToggleButton fx:id="btnLogs" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#navegar" styleClass="nav-boton" text="Logs y pruebas" toggleGroup="$grupoMenu" userData="LogsPruebas">
+            <!-- Solo para el Administrador general (se muestra al iniciar sesión con esa área) -->
+            <Label fx:id="lblSeccionSoporte" managed="false" styleClass="sidebar-seccion" text="SOPORTE Y AUDITORÍA" visible="false" />
+            <ToggleButton fx:id="btnLogs" managed="false" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#navegar" styleClass="nav-boton" text="Logs" toggleGroup="$grupoMenu" userData="LogsPruebas" visible="false">
                <graphic>
                   <SVGPath content="M4 5 H20 V19 H4 Z M8 9 H16 M8 13 H16 M8 17 H12" styleClass="nav-icono" />
                </graphic>

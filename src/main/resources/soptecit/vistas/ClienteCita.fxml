@@ -3,6 +3,7 @@
 <?import java.lang.String?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
@@ -131,6 +132,12 @@
                               </VBox>
                            </children>
                         </HBox>
+                        <VBox spacing="4.0">
+                           <children>
+                              <Label styleClass="portal-etiqueta" text="Estado" />
+                              <ComboBox fx:id="cmbEstadoDomicilio" maxWidth="420.0" promptText="Elige tu estado de la lista" styleClass="combo-portal" />
+                           </children>
+                        </VBox>
                      </children>
                   </VBox>
 
